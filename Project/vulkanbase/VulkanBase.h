@@ -16,6 +16,8 @@
 #include <limits>
 #include <algorithm>
 #include "GP2Shader.h"
+#include "GP2CommandPool.h"
+#include "GP2CommandBuffer.h"
 
 
 const std::vector<const char*> validationLayers = {
@@ -71,8 +73,9 @@ private:
 		createGraphicsPipeline();
 		createFrameBuffers();
 		// week 02
-		createCommandPool();
-		createCommandBuffer();
+
+		m_CommandPool.Initialize(device, findQueueFamilies(physicalDevice));
+		m_CommandBuffer = m_CommandPool.createCommandBuffer(device);
 
 		// week 06
 		createSyncObjects();
@@ -82,7 +85,7 @@ private:
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
 			// week 06
-			drawFrame();
+			DrawFrame();
 		}
 		vkDeviceWaitIdle(device);
 	}
@@ -92,7 +95,8 @@ private:
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
 
-		vkDestroyCommandPool(device, commandPool, nullptr);
+		//vkDestroyCommandPool(device, commandPool, nullptr);
+		m_CommandPool.DestroyCommandPool(device);
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
@@ -140,27 +144,17 @@ private:
 	void initWindow();
 
 	GP2Shader gp2Shader{"shaders/shader.vert.spv", "shaders/shader.frag.spv" };
-	//VkPipelineShaderStageCreateInfo createFragmentShaderInfo();
-	//VkPipelineShaderStageCreateInfo createVertexShaderInfo();
-	//VkPipelineVertexInputStateCreateInfo createVertexInputStateInfo();
-	//VkPipelineInputAssemblyStateCreateInfo createInputAssemblyStateInfo();
-	//VkShaderModule createShaderModule(const std::vector<char>& code);
-
 	void drawScene();
 
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
 
-	VkCommandPool commandPool;
-	VkCommandBuffer commandBuffer;
-
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
-	void drawFrame(uint32_t imageIndex);
-	void createCommandBuffer();
-	void createCommandPool(); 
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void DrawFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	GP2CommandPool m_CommandPool{};
+	GP2CommandBuffer m_CommandBuffer{};
 	
 	// Week 03
 	// Renderpass concept
@@ -222,7 +216,7 @@ private:
 	void createInstance();
 
 	void createSyncObjects();
-	void drawFrame();
+	void DrawFrame();
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 		std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;

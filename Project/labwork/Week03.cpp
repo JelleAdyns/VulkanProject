@@ -115,7 +115,7 @@ void VulkanBase::createGraphicsPipeline() {
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 
 
-	pipelineInfo.stageCount = gp2Shader.GetShaderStageInfos().size();
+	pipelineInfo.stageCount = (uint32_t) gp2Shader.GetShaderStageInfos().size();
 	pipelineInfo.pStages = gp2Shader.GetShaderStageInfos().data();
 	pipelineInfo.pVertexInputState = &gp2Shader.createVertexInputStateInfo();
 	pipelineInfo.pInputAssemblyState = &gp2Shader.createInputAssemblyStateInfo();
