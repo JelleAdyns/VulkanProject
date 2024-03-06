@@ -1,8 +1,7 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
-#include "Vertex.h"
 #include <array>
-struct Vertex;
+#include "Vertex.h"
 class GP2Shader final 
 {
 public:

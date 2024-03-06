@@ -1,5 +1,5 @@
 #include "GP2Shader.h"
-#include "Vertex.h"
+
 
 void GP2Shader::Init(const VkDevice& device)
 {

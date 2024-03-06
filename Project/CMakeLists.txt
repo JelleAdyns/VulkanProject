@@ -43,6 +43,10 @@ set(SOURCES
     "GP2CommandBuffer.h"
     "GP2CommandBuffer.cpp"
     "Vertex.h"
+    "GP2Mesh.h"
+    "GP2Mesh.cpp"
+    "GP2Scene.h" 
+    "GP2Scene.cpp"
 )
 
 # Create the executable

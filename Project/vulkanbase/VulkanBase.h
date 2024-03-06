@@ -16,6 +16,8 @@
 #include <limits>
 #include <algorithm>
 #include "GP2Shader.h"
+#include "GP2Mesh.h"
+#include "GP2Scene.h"
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
 #include "Vertex.h"
@@ -75,8 +77,20 @@ private:
 		createFrameBuffers();
 		// week 02
 
+
+		//m_Mesh.AddVertex(glm::vec2{ -0.25, -0.25 }, glm::vec3{ 1.0, 0.0, 0.0 });
+		//m_Mesh.AddVertex(glm::vec2{ 0.25, -0.25 }, glm::vec3{ 0.0, 1.0, 0.0 });
+		//m_Mesh.AddVertex(glm::vec2{ -0.25, 0.25 }, glm::vec3{ 0.0, 0.0, 1.0 });
+		//m_Mesh.AddVertex(glm::vec2{ -0.25, 0.25 }, glm::vec3{ 0.0, 0.0, 1.0 });
+		//m_Mesh.AddVertex(glm::vec2{ 0.25, -0.25 }, glm::vec3{ 0.0, 1.0, 0.0 });
+		//m_Mesh.AddVertex(glm::vec2{ 0.25, 0.25 }, glm::vec3{ 1.0, 0.0, 0.0 });
+		
 		m_CommandPool.Initialize(device, findQueueFamilies(physicalDevice));
-		createVertexBuffer();
+		//m_Mesh.Initialize(physicalDevice,device);
+		//m_Scene.AddRectangle(-0.95f, -0.25f, 0.15f, 0.25f, physicalDevice, device);
+		m_Scene.AddRoundedRectangle(-0.95f, -0.25f, 0.15f, 0.25f,0.1f,0.3f,10, physicalDevice, device);
+		//m_Scene.AddOval(0, 0.5, 1.f, 0.5f, 30, physicalDevice, device);
+
 		m_CommandBuffer = m_CommandPool.createCommandBuffer(device);
 
 		// week 06
@@ -116,8 +130,7 @@ private:
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
 
-		vkDestroyBuffer(device, vertexBuffer, nullptr);
-		vkFreeMemory(device, vertexBufferMemory, nullptr);
+		m_Scene.DestroyMeshes(device);
 
 		vkDestroyDevice(device, nullptr);
 
@@ -155,24 +168,14 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-	const std::vector<Vertex> vertices = {
-	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-	};
-	VkBuffer vertexBuffer;
-	VkMemoryRequirements memRequirements;
-	VkDeviceMemory vertexBufferMemory;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-	void createVertexBuffer();
-	void CreateVertexBufferMemory();
-	void FillVertexBuffer(VkDeviceSize bufferInfoSize);
+
 	void DrawFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	GP2CommandPool m_CommandPool{};
 	GP2CommandBuffer m_CommandBuffer{};
-	
+	GP2Mesh m_Mesh{};
+	GP2Scene m_Scene{};
 	// Week 03
 	// Renderpass concept
 	// Graphics pipeline
