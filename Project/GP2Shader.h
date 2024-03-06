@@ -1,12 +1,17 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
+#include "Vertex.h"
+#include <array>
+struct Vertex;
 class GP2Shader final 
 {
 public:
 	GP2Shader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile) : 
 		m_VertexShaderFile{ vertexShaderFile },
 		m_FragmentShaderFile{ fragmentShaderFile },
-		m_VecShadersStageInfos{}
+		m_VecShadersStageInfos{  },
+		m_InputBinding{Vertex::GetBindingDescription()},
+		m_AttributeDescriptions{ Vertex::GetAttributeDescriptions() }
 	{}
 
 	~GP2Shader() = default;
@@ -29,6 +34,8 @@ private:
 	std::string m_VertexShaderFile;
 	std::string m_FragmentShaderFile;
 
+	std::array<VkVertexInputAttributeDescription, 2> m_AttributeDescriptions;
+	VkVertexInputBindingDescription m_InputBinding;
 	VkPipelineShaderStageCreateInfo createFragmentShaderInfo(const VkDevice& device);
 	VkPipelineShaderStageCreateInfo createVertexShaderInfo(const VkDevice& device);
 

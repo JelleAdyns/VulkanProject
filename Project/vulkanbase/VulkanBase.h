@@ -18,6 +18,7 @@
 #include "GP2Shader.h"
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
+#include "Vertex.h"
 
 
 const std::vector<const char*> validationLayers = {
@@ -75,6 +76,7 @@ private:
 		// week 02
 
 		m_CommandPool.Initialize(device, findQueueFamilies(physicalDevice));
+		createVertexBuffer();
 		m_CommandBuffer = m_CommandPool.createCommandBuffer(device);
 
 		// week 06
@@ -113,6 +115,10 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
+
 		vkDestroyDevice(device, nullptr);
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -149,9 +155,20 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
+	const std::vector<Vertex> vertices = {
+	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
+	VkBuffer vertexBuffer;
+	VkMemoryRequirements memRequirements;
+	VkDeviceMemory vertexBufferMemory;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void createVertexBuffer();
+	void CreateVertexBufferMemory();
+	void FillVertexBuffer(VkDeviceSize bufferInfoSize);
 	void DrawFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	GP2CommandPool m_CommandPool{};
 	GP2CommandBuffer m_CommandBuffer{};
@@ -165,6 +182,7 @@ private:
 	VkPipeline graphicsPipeline;
 	VkRenderPass renderPass;
 
+	
 	void createFrameBuffers();
 	void createRenderPass();
 	void createGraphicsPipeline();

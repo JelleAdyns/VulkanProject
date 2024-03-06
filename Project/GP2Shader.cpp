@@ -1,5 +1,5 @@
 #include "GP2Shader.h"
-
+#include "Vertex.h"
 
 void GP2Shader::Init(const VkDevice& device)
 {
@@ -44,9 +44,12 @@ VkPipelineShaderStageCreateInfo GP2Shader::createVertexShaderInfo(const VkDevice
 VkPipelineVertexInputStateCreateInfo GP2Shader::createVertexInputStateInfo()
 {
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{ };
+
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &m_InputBinding;
+	vertexInputInfo.pVertexAttributeDescriptions = m_AttributeDescriptions.data() ;
 	return vertexInputInfo;
 }
 
