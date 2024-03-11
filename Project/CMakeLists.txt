@@ -47,6 +47,8 @@ set(SOURCES
     "GP2Mesh.cpp"
     "GP2Scene.h" 
     "GP2Scene.cpp"
+    "GP2GraphicsPipeline.h" 
+    "GP2GraphicsPipeline.cpp"
 )
 
 # Create the executable
