@@ -1,46 +1,32 @@
 #include "GP2Mesh.h"
+#include "GP2CommandPool.h"
+#include "GP2CommandBuffer.h"
 
-
-void GP2Mesh::Initialize(const VkPhysicalDevice& physicalDevice, const VkDevice& device)
+void GP2Mesh::Initialize(const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof(m_VecVertices[0]) * m_VecVertices.size();
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if (vkCreateBuffer(device, &bufferInfo, nullptr, &m_VkBuffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create vertex buffer!");
-	}
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(device, m_VkBuffer, &memRequirements);
+	VkDeviceSize size = sizeof(m_VecVertices[0]) * m_VecVertices.size();
 	
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	if (vkAllocateMemory(device, &allocInfo, nullptr, &m_VkBufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate vertex buffer memory!");
-	}
-
-	vkBindBufferMemory(device, m_VkBuffer, m_VkBufferMemory, 0);
-
+	m_StagingBuffer.CreateBuffer(device, physicalDevice, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	
 	void* data;
-	vkMapMemory(device, m_VkBufferMemory, 0, bufferInfo.size, 0, &data);
-	memcpy(data, m_VecVertices.data(), (size_t)bufferInfo.size);
-	vkUnmapMemory(device, m_VkBufferMemory);
+	vkMapMemory(device, m_StagingBuffer.GetVkBufferMemory(), 0, size, 0, &data);
+	memcpy(data, m_VecVertices.data(), (size_t)size);
+	vkUnmapMemory(device, m_StagingBuffer.GetVkBufferMemory());
+	
+	m_VertexBuffer.CreateBuffer(device, physicalDevice, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	CopyBuffer(device, commandPool, size, graphicsQueue);
 }
 
 void GP2Mesh::DestroyMesh(const VkDevice& device)
 {
-	vkDestroyBuffer(device, m_VkBuffer, nullptr);
-	vkFreeMemory(device, m_VkBufferMemory, nullptr);
+	m_VertexBuffer.DestroyBuffer(device);
+	m_StagingBuffer.DestroyBuffer(device);
 }
 
 void GP2Mesh::Draw(const VkCommandBuffer& cmdBuffer) const
 {
-	VkBuffer vertexBuffers[] = { m_VkBuffer };
+	VkBuffer vertexBuffers[] = { m_VertexBuffer.GetVkBuffer() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdDraw(cmdBuffer, static_cast<uint32_t>(m_VecVertices.size()), 1, 0, 0);
@@ -51,16 +37,30 @@ void GP2Mesh::AddVertex(glm::vec2 pos, glm::vec3 color)
 	m_VecVertices.push_back(Vertex{ pos, color });
 }
 
-uint32_t GP2Mesh::FindMemoryType(const VkPhysicalDevice& physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties) const
+void GP2Mesh::CopyBuffer(const VkDevice& device, const GP2CommandPool& commandPool, VkDeviceSize size, VkQueue graphicsQueue)
 {
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+	GP2CommandBuffer cmdBuffer = commandPool.createCommandBuffer(device);
 
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-			return i;
-		}
-	}
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	throw std::runtime_error("failed to find suitable memory type!");
+	vkBeginCommandBuffer(cmdBuffer.GetVkCommandBuffer(), &beginInfo);
+
+	VkBufferCopy copyRegion{};
+	copyRegion.size = size;
+	vkCmdCopyBuffer(cmdBuffer.GetVkCommandBuffer(), m_StagingBuffer.GetVkBuffer(), m_VertexBuffer.GetVkBuffer(), 1, &copyRegion);
+
+	vkEndCommandBuffer(cmdBuffer.GetVkCommandBuffer());
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	cmdBuffer.submit(submitInfo);
+
+	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(graphicsQueue);
+
+	cmdBuffer.FreeBuffer(device, commandPool);
+
 }
+

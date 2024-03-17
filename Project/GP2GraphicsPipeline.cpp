@@ -10,9 +10,9 @@ void GP2GraphicsPipeline::Initialize(const VkDevice& device, const VkFormat& swa
 
 void GP2GraphicsPipeline::Destroy(const VkDevice& device)
 {
+	vkDestroyRenderPass(device, m_RenderPass, nullptr);
 	vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
-	vkDestroyRenderPass(device, m_RenderPass, nullptr);
 }
 
 VkRenderPass GP2GraphicsPipeline::GetRenderPass() const

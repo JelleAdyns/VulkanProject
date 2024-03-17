@@ -8,7 +8,7 @@ void GP2Scene::AddMesh(const GP2Mesh& gp2Mesh)
 	//m_VecMeshes.push_back(gp2Mesh);
 }
 
-void GP2Scene::AddRectangle(float top, float left, float bottom, float right, const VkPhysicalDevice& physicalDevice, const VkDevice& device)
+void GP2Scene::AddRectangle(float top, float left, float bottom, float right, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
 	assert((left < right) && "Left is greater than right");
 	assert((top < bottom) && "Top is greater than bottom");
@@ -24,11 +24,11 @@ void GP2Scene::AddRectangle(float top, float left, float bottom, float right, co
 	rect.AddVertex(vertices[0].pos, vertices[0].color);
 	rect.AddVertex(vertices[2].pos, vertices[2].color);
 	rect.AddVertex(vertices[3].pos, vertices[3].color);
-	rect.Initialize(physicalDevice, device);
+	rect.Initialize(physicalDevice, device, commandPool, graphicsQueue);
 	m_VecMeshes.push_back(std::move(rect));
 }
 
-void GP2Scene::AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const VkPhysicalDevice& physicalDevice, const VkDevice& device)
+void GP2Scene::AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
 
 	assert((left < right ) && "Left is greater than right");
@@ -168,11 +168,11 @@ void GP2Scene::AddRoundedRectangle(float top, float left, float bottom, float ri
 	rect.AddVertex(verticesMiddleRect[2].pos, verticesMiddleRect[2].color);
 	rect.AddVertex(verticesMiddleRect[3].pos, verticesMiddleRect[3].color);
 
-	rect.Initialize(physicalDevice, device);
+	rect.Initialize(physicalDevice, device, commandPool, graphicsQueue);
 	m_VecMeshes.push_back(std::move(rect));
 }
 
-void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const VkPhysicalDevice& physicalDevice, const VkDevice& device)
+void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
 
 	assert((radiusX > 0 && radiusY > 0));
@@ -198,7 +198,7 @@ void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radius
 
 	}
 
-	oval.Initialize(physicalDevice, device);
+	oval.Initialize(physicalDevice, device, commandPool, graphicsQueue);
 	m_VecMeshes.push_back(std::move(oval));
 }
 

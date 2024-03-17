@@ -1,9 +1,15 @@
 #include "GP2CommandBuffer.h"
+#include "GP2CommandPool.h"
 
 
 void GP2CommandBuffer::reset()const 
 {
 	 vkResetCommandBuffer(m_CommandBuffer, /*VkCommandBufferResetFlagBits*/ 0);	
+}
+
+void GP2CommandBuffer::FreeBuffer(const VkDevice& device, const GP2CommandPool& commandPool)
+{
+	vkFreeCommandBuffers(device, commandPool.GetCommandPool(), 1, &m_CommandBuffer);
 }
 
 void GP2CommandBuffer::BeginRecordBuffer()

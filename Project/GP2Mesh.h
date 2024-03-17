@@ -3,11 +3,13 @@
 #include "glm/glm.hpp"
 #include <vector>
 #include "Vertex.h"
+#include "GP2Buffer.h"
 
+class GP2CommandPool;
 class GP2Mesh
 {
 public:
-	GP2Mesh() : m_VkBuffer{}, m_VkBufferMemory{}, m_VecVertices{}
+	GP2Mesh() : m_VertexBuffer{}, m_StagingBuffer{}, m_VecVertices {}
 	{}
 	~GP2Mesh() = default;
 
@@ -16,7 +18,7 @@ public:
 	GP2Mesh& operator=(const GP2Mesh& other) = delete;
 	GP2Mesh& operator=(GP2Mesh&& other) noexcept = default;
 
-	void Initialize(const VkPhysicalDevice& physicalDevice, const VkDevice& device);
+	void Initialize(const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue);
 
 	void DestroyMesh(const VkDevice& device);
 
@@ -25,9 +27,9 @@ public:
 	void AddVertex(glm::vec2 pos, glm::vec3 color);
 
 private:
-	uint32_t FindMemoryType(const VkPhysicalDevice& physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties) const;
 
-	VkBuffer m_VkBuffer;
-	VkDeviceMemory m_VkBufferMemory;
+	void CopyBuffer(const VkDevice& device, const GP2CommandPool& commandPool, VkDeviceSize size, VkQueue graphicsQueue);
+	GP2Buffer m_VertexBuffer;
+	GP2Buffer m_StagingBuffer;
 	std::vector<Vertex> m_VecVertices;
 };
