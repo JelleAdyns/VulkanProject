@@ -142,3 +142,12 @@ void VulkanBase::createImageViews() {
 		}
 	}
 }
+void VulkanBase::recreateSwapChain() {
+	vkDeviceWaitIdle(device);
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+	createSwapChain();
+	createImageViews();
+	createFrameBuffers();
+}

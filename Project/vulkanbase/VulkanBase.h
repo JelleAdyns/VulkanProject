@@ -160,7 +160,7 @@ private:
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
-	void DrawFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	GP2CommandPool m_CommandPool{};
 	GP2CommandBuffer m_CommandBuffer{};
 	GP2Scene m_Scene{};
@@ -172,6 +172,7 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	GP2GraphicsPipeline m_Pipeline{};
+	
 	void createFrameBuffers();
 
 	// Week 04
@@ -190,7 +191,7 @@ private:
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	void createSwapChain();
 	void createImageViews();
-
+	void recreateSwapChain();
 	// Week 05 
 	// Logical and physical device
 

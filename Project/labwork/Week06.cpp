@@ -40,13 +40,19 @@ void VulkanBase::DrawFrame() {
 	vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
 	vkResetFences(device, 1, &inFlightFence);
 
-	uint32_t imageIndex;
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+	uint32_t imageIndex{};
+	VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		//recreateSwapChain();
+		return;
+	}
+
+	vkResetFences(device, 1, &inFlightFence);
 
 	m_CommandBuffer.reset();
 	m_CommandBuffer.BeginRecordBuffer();
 	// recordCommandBuffer in Week02.cpp
-	DrawFrame(m_CommandBuffer.GetVkCommandBuffer(), imageIndex);
+	RecordCommandBuffer(m_CommandBuffer.GetVkCommandBuffer(), imageIndex);
 	m_CommandBuffer.EndRecordBuffer();
 
 	VkSubmitInfo submitInfo{};
@@ -80,7 +86,10 @@ void VulkanBase::DrawFrame() {
 
 	presentInfo.pImageIndices = &imageIndex;
 
-	vkQueuePresentKHR(presentQueue, &presentInfo);
+	result = vkQueuePresentKHR(presentQueue, &presentInfo);
+	/*if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		recreateSwapChain();
+	}*/
 }
 
 bool checkValidationLayerSupport() {

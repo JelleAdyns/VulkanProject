@@ -34,7 +34,7 @@ QueueFamilyIndices VulkanBase::findQueueFamilies(VkPhysicalDevice device) {
 	return indices;
 }
 
-void VulkanBase::DrawFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+void VulkanBase::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_Pipeline.GetRenderPass();
