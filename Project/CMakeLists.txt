@@ -51,6 +51,8 @@ set(SOURCES
     "GP2GraphicsPipeline.cpp"
     "GP2Buffer.h"
     "GP2Buffer.cpp"
+    "GP2DescriptorPool.h"
+    "GP2DescriptorPool.cpp"
 )
 
 # Create the executable

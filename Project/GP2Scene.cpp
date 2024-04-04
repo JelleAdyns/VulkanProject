@@ -8,171 +8,266 @@ void GP2Scene::AddMesh(const GP2Mesh& gp2Mesh)
 	//m_VecMeshes.push_back(gp2Mesh);
 }
 
-void GP2Scene::AddRectangle(float top, float left, float bottom, float right, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
+void GP2Scene::AddRectangle(float top, float left, float bottom, float right, 
+	const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
-	assert((left < right) && "Left is greater than right");
-	assert((top < bottom) && "Top is greater than bottom");
-	Vertex vertices[4]{ {glm::vec2{left, top},glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec2{right, top},glm::vec3{0.0f,1.0f,0.0f}},
-						{glm::vec2{right, bottom},glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec2{left, bottom},glm::vec3{0.0f,0.0f,1.0f}} };
-
 	GP2Mesh rect{};
-	rect.AddVertex(vertices[0].pos, vertices[0].color);
-	rect.AddVertex(vertices[1].pos, vertices[1].color);
-	rect.AddVertex(vertices[2].pos, vertices[2].color);
-	rect.AddVertex(vertices[0].pos, vertices[0].color);
-	rect.AddVertex(vertices[2].pos, vertices[2].color);
-	rect.AddVertex(vertices[3].pos, vertices[3].color);
+	
+	//MakeRect(rect, top, left, bottom, right);
+	const std::vector<Vertex2D> vertices = {
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+	std::vector<uint16_t> indices { 0, 1, 2, 2, 3, 0 };
+
+	for (const auto& vertex : vertices)
+		rect.AddVertex(vertex.pos, vertex.color);
+
+	for (const auto& index : indices)
+		rect.AddIndex(index);
+
 	rect.Initialize(physicalDevice, device, commandPool, graphicsQueue);
 	m_VecMeshes.push_back(std::move(rect));
 }
 
-void GP2Scene::AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
+void GP2Scene::AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, 
+	const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
 
 	assert((left < right ) && "Left is greater than right");
 	assert((top < bottom) && "Top is greater than bottom");
 	assert((radiusX > 0 && radiusY > 0) && "Radius is less or equal than 0");
 
-	constexpr float pi = 3.14159265359f;
+	//	    LAYOUT
+	// 
+	//	 ---4---5---
+	//	/	|	|	\
+	//	6---0---1---8
+	//	|	|	|	|
+	//	7---3---2---9
+	//	\	|	|	/
+	//	 ---10-11---
 
-	float radians = pi / 2 / numberOfSegmentsPerCorner;
-
-	//Upper Rect
-	Vertex verticesTopRect[4]{ {glm::vec2{left + radiusX, top},glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec2{right - radiusX, top},glm::vec3{0.0f,1.0f,0.0f}},
-						{glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f}} };
-
+	int currMaxIndex{-1};
 	GP2Mesh rect{};
-	rect.AddVertex(verticesTopRect[0].pos, verticesTopRect[0].color);
-	rect.AddVertex(verticesTopRect[1].pos, verticesTopRect[1].color);
-	rect.AddVertex(verticesTopRect[2].pos, verticesTopRect[2].color);
-	rect.AddVertex(verticesTopRect[0].pos, verticesTopRect[0].color);
-	rect.AddVertex(verticesTopRect[2].pos, verticesTopRect[2].color);
-	rect.AddVertex(verticesTopRect[3].pos, verticesTopRect[3].color);
 
-	Vertex startPoint;
-	Vertex endPoint;
-
-	startPoint.color = glm::vec3{ 1.0f, 0.f, 0.f };
-	endPoint.color = glm::vec3{ 0.0f, 1.f, 0.f };
-
-	for (int i = 0; i < numberOfSegmentsPerCorner; i++)
-	{
-		startPoint.pos.x = verticesTopRect[3].pos.x + radiusX * glm::cos(radians * i + pi);
-		startPoint.pos.y = verticesTopRect[3].pos.y + radiusY * glm::sin(radians * i + pi);
-
-		endPoint.pos.x = verticesTopRect[3].pos.x + radiusX * glm::cos(radians * (i+1) + pi);
-		endPoint.pos.y = verticesTopRect[3].pos.y + radiusY * glm::sin(radians * (i+1) + pi);
-
-		rect.AddVertex(startPoint.pos, startPoint.color);
-		rect.AddVertex(endPoint.pos, endPoint.color);
-		rect.AddVertex(verticesTopRect[3].pos, verticesTopRect[3].color);
-	}
-
-	//Left Rect
-	Vertex verticesLeftRect[4]{};
-	verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{1.0f,0.0f,0.0f} };
-	verticesLeftRect[1] = verticesTopRect[3];
-	verticesLeftRect[2] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{1.0f,0.0f,0.0f} };
-	verticesLeftRect[3] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f }};
-
-	rect.AddVertex(verticesLeftRect[0].pos, verticesLeftRect[0].color);
-	rect.AddVertex(verticesLeftRect[1].pos, verticesLeftRect[1].color);
-	rect.AddVertex(verticesLeftRect[2].pos, verticesLeftRect[2].color);
-	rect.AddVertex(verticesLeftRect[0].pos, verticesLeftRect[0].color);
-	rect.AddVertex(verticesLeftRect[2].pos, verticesLeftRect[2].color);
-	rect.AddVertex(verticesLeftRect[3].pos, verticesLeftRect[3].color);
-
-	for (int i = 0; i < numberOfSegmentsPerCorner; i++)
-	{
-		startPoint.pos.x = verticesLeftRect[2].pos.x + radiusX * glm::cos(radians * i + pi / 2);
-		startPoint.pos.y = verticesLeftRect[2].pos.y + radiusY * glm::sin(radians * i + pi / 2);
-
-		endPoint.pos.x = verticesLeftRect[2].pos.x + radiusX * glm::cos(radians * (i + 1) + pi / 2);
-		endPoint.pos.y = verticesLeftRect[2].pos.y + radiusY * glm::sin(radians * (i + 1) + pi / 2);
-
-		rect.AddVertex(startPoint.pos, startPoint.color);
-		rect.AddVertex(endPoint.pos, endPoint.color);
-		rect.AddVertex(verticesLeftRect[2].pos, verticesLeftRect[2].color);
-	}
-	
-
-	//Right Rect
-	Vertex verticesRightRect[4]{};
-	verticesRightRect[0] = verticesTopRect[2];
-	verticesRightRect[1] = { glm::vec2{ right, top + radiusY }, glm::vec3{0.0f,1.0f,0.0f} };
-	verticesRightRect[2] = { glm::vec2{ right, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f} };
-	verticesRightRect[3] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{0.0f,0.0f,1.0f} };
-
-	rect.AddVertex(verticesRightRect[0].pos, verticesRightRect[0].color);
-	rect.AddVertex(verticesRightRect[1].pos, verticesRightRect[1].color);
-	rect.AddVertex(verticesRightRect[2].pos, verticesRightRect[2].color);
-	rect.AddVertex(verticesRightRect[0].pos, verticesRightRect[0].color);
-	rect.AddVertex(verticesRightRect[2].pos, verticesRightRect[2].color);
-	rect.AddVertex(verticesRightRect[3].pos, verticesRightRect[3].color);
-
-	for (int i = 0; i < numberOfSegmentsPerCorner; i++)
-	{
-		startPoint.pos.x = verticesRightRect[0].pos.x + radiusX * glm::cos(radians * i - pi / 2);
-		startPoint.pos.y = verticesRightRect[0].pos.y + radiusY * glm::sin(radians * i - pi / 2);
-
-		endPoint.pos.x = verticesRightRect[0].pos.x + radiusX * glm::cos(radians * (i + 1) - pi / 2);
-		endPoint.pos.y = verticesRightRect[0].pos.y + radiusY * glm::sin(radians * (i + 1) - pi / 2);
-
-		rect.AddVertex(startPoint.pos, startPoint.color);
-		rect.AddVertex(endPoint.pos, endPoint.color);
-		rect.AddVertex(verticesRightRect[0].pos, verticesRightRect[0].color);
-	}
-	
-	//Bottom Rect
-	Vertex verticesBottomRect[4]{};
-	verticesBottomRect[0] = verticesLeftRect[2];
-	verticesBottomRect[1] = verticesRightRect[3];
-	verticesBottomRect[2] = { glm::vec2{ right - radiusX, bottom } ,glm::vec3{1.0f,0.0f,0.0f} };
-	verticesBottomRect[3] = { glm::vec2{ left + radiusX, bottom }, glm::vec3{0.0f,0.0f,1.0f} };
-
-	rect.AddVertex(verticesBottomRect[0].pos, verticesBottomRect[0].color);
-	rect.AddVertex(verticesBottomRect[1].pos, verticesBottomRect[1].color);
-	rect.AddVertex(verticesBottomRect[2].pos, verticesBottomRect[2].color);
-	rect.AddVertex(verticesBottomRect[0].pos, verticesBottomRect[0].color);
-	rect.AddVertex(verticesBottomRect[2].pos, verticesBottomRect[2].color);
-	rect.AddVertex(verticesBottomRect[3].pos, verticesBottomRect[3].color);
-
-	for (int i = 0; i < numberOfSegmentsPerCorner; i++)
-	{
-		startPoint.pos.x = verticesBottomRect[1].pos.x + radiusX * glm::cos(radians * i);
-		startPoint.pos.y = verticesBottomRect[1].pos.y + radiusY * glm::sin(radians * i);
-
-		endPoint.pos.x = verticesBottomRect[1].pos.x + radiusX * glm::cos(radians * (i + 1));
-		endPoint.pos.y = verticesBottomRect[1].pos.y + radiusY * glm::sin(radians * (i + 1));
-
-		rect.AddVertex(startPoint.pos, startPoint.color);
-		rect.AddVertex(endPoint.pos, endPoint.color);
-		rect.AddVertex(verticesBottomRect[1].pos, verticesBottomRect[1].color);
-	}
-
-	//Middle Rect
-	Vertex verticesMiddleRect[4]{};
-	verticesMiddleRect[0] = verticesTopRect[3];
-	verticesMiddleRect[1] = verticesRightRect[0];
-	verticesMiddleRect[2] = verticesBottomRect[1];
-	verticesMiddleRect[3] = verticesLeftRect[2];
+	//MiddleRect
+	Vertex2D verticesMiddleRect[4]{};
+	verticesMiddleRect[0] = { glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f} };
+	verticesMiddleRect[1] = { glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f} };
+	verticesMiddleRect[2] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f} };
+	verticesMiddleRect[3] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f} };
 
 	rect.AddVertex(verticesMiddleRect[0].pos, verticesMiddleRect[0].color);
 	rect.AddVertex(verticesMiddleRect[1].pos, verticesMiddleRect[1].color);
 	rect.AddVertex(verticesMiddleRect[2].pos, verticesMiddleRect[2].color);
-	rect.AddVertex(verticesMiddleRect[0].pos, verticesMiddleRect[0].color);
-	rect.AddVertex(verticesMiddleRect[2].pos, verticesMiddleRect[2].color);
 	rect.AddVertex(verticesMiddleRect[3].pos, verticesMiddleRect[3].color);
+	currMaxIndex += 4;
+
+	rect.AddIndex(0);
+	rect.AddIndex(1);
+	rect.AddIndex(2);
+
+	rect.AddIndex(0);
+	rect.AddIndex(2);
+	rect.AddIndex(3);
+
+	//TopRect
+	Vertex2D verticesTopRect[2]{};
+	verticesTopRect[0] = { glm::vec2{left + radiusX, top},glm::vec3{0.0f,0.0f,1.0f} };
+	verticesTopRect[1] = { glm::vec2{right - radiusX, top},glm::vec3{1.0f,0.0f,0.0f} };
+
+	rect.AddVertex(verticesTopRect[0].pos, verticesTopRect[0].color);
+	rect.AddVertex(verticesTopRect[1].pos, verticesTopRect[1].color);
+	currMaxIndex += 2;
+
+	rect.AddIndex(4);
+	rect.AddIndex(5);
+	rect.AddIndex(1);
+
+	rect.AddIndex(4);
+	rect.AddIndex(1);
+	rect.AddIndex(0);
+
+	//LeftRect
+	Vertex2D verticesLeftRect[2]{};
+	verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+	verticesLeftRect[1] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+
+	rect.AddVertex(verticesLeftRect[0].pos, verticesLeftRect[0].color);
+	rect.AddVertex(verticesLeftRect[1].pos, verticesLeftRect[1].color);
+	currMaxIndex += 2;
+
+	rect.AddIndex(6);
+	rect.AddIndex(0);
+	rect.AddIndex(3);
+
+	rect.AddIndex(6);
+	rect.AddIndex(3);
+	rect.AddIndex(7);
+
+	//RightRect
+	Vertex2D verticesRightRect[2]{};
+	verticesRightRect[0] = { glm::vec2{ right, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+	verticesRightRect[1] = { glm::vec2{ right, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f } };
+
+	rect.AddVertex(verticesRightRect[0].pos, verticesRightRect[0].color);
+	rect.AddVertex(verticesRightRect[1].pos, verticesRightRect[1].color);
+	currMaxIndex += 2;
+
+	rect.AddIndex(1);
+	rect.AddIndex(8);
+	rect.AddIndex(9);
+
+	rect.AddIndex(1);
+	rect.AddIndex(9);
+	rect.AddIndex(2);
+
+	//BottomRect
+	Vertex2D verticesBottomRect[2]{};
+	verticesBottomRect[0] = { glm::vec2{ left + radiusX, bottom },glm::vec3{0.0f,0.0f,1.0f} };
+	verticesBottomRect[1] = { glm::vec2{ right - radiusX, bottom },glm::vec3{1.0f,0.0f,0.0f } };
+
+	rect.AddVertex(verticesBottomRect[0].pos, verticesBottomRect[0].color);
+	rect.AddVertex(verticesBottomRect[1].pos, verticesBottomRect[1].color);
+	currMaxIndex += 2;
+
+	rect.AddIndex(3);
+	rect.AddIndex(2);
+	rect.AddIndex(11);
+
+	rect.AddIndex(3);
+	rect.AddIndex(11);
+	rect.AddIndex(10);
+
+
+
+	//CORNERS
+	Vertex2D currEdgeVertex;
+	constexpr float pi = 3.14159265359f;
+	float radians = pi / 2 / numberOfSegmentsPerCorner;
+
+	//TopLeftCorner
+	
+	rect.AddIndex(0);
+	rect.AddIndex(6);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[0].pos.x + radiusX * glm::cos(radians * i + pi);
+		currEdgeVertex.pos.y = verticesMiddleRect[0].pos.y + radiusY * glm::sin(radians * i + pi);
+
+		rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(0);
+			rect.AddIndex(currMaxIndex-1);
+		}
+	}
+
+	rect.AddIndex(0);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(4);
+
+
+	//TopRightCorner
+	rect.AddIndex(1);
+	rect.AddIndex(5);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[1].pos.x + radiusX * glm::cos(radians * i - pi/2);
+		currEdgeVertex.pos.y = verticesMiddleRect[1].pos.y + radiusY * glm::sin(radians * i - pi/2);
+
+		rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(1);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(1);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(8);
+
+
+	//BottomLeftCorner
+	rect.AddIndex(3);
+	rect.AddIndex(10);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[3].pos.x + radiusX * glm::cos(radians * i + pi / 2);
+		currEdgeVertex.pos.y = verticesMiddleRect[3].pos.y + radiusY * glm::sin(radians * i + pi / 2);
+
+		rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(3);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(3);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(7);
+
+
+	//BottomRightCorner
+	rect.AddIndex(2);
+	rect.AddIndex(9);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[2].pos.x + radiusX * glm::cos(radians * i);
+		currEdgeVertex.pos.y = verticesMiddleRect[2].pos.y + radiusY * glm::sin(radians * i);
+
+		rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(2);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(2);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(11);
+	
 
 	rect.Initialize(physicalDevice, device, commandPool, graphicsQueue);
 	m_VecMeshes.push_back(std::move(rect));
 }
 
-void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
+void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, 
+	const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
 
 	assert((radiusX > 0 && radiusY > 0));
@@ -180,22 +275,23 @@ void GP2Scene::AddOval(float centerX, float centerY, float radiusX, float radius
 
 	float radians = pi * 2 / numberOfSegments;
 
-	Vertex center  {glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f}};
-	Vertex startPoint { glm::vec2{}, glm::vec3{0.0f,1.0f,0.0f} };
-	Vertex endPoint { glm::vec2{}, glm::vec3{1.0f,0.0f,0.0f} };
-	
 	GP2Mesh oval;
-	for (int i = 0; i < numberOfSegments; i++)
+
+	Vertex2D center  {glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f}};
+	Vertex2D currEdgeVertex { {}, glm::vec3{0.0f,1.0f,0.0f} };
+	
+	oval.AddVertex(center.pos, center.color);
+	for (int i = 1; i <= numberOfSegments; i++)
 	{
-		startPoint.pos.x = centerX + radiusX * glm::cos(radians * i);
-		startPoint.pos.y = centerY + radiusY * glm::sin(radians * i);
-		endPoint.pos.x = centerX + radiusX * glm::cos(radians * (i+1));
-		endPoint.pos.y = centerY + radiusY * glm::sin(radians * (i+1));
+		currEdgeVertex.pos.x = centerX + radiusX * glm::cos(radians * i);
+		currEdgeVertex.pos.y = centerY + radiusY * glm::sin(radians * i);
 
-		oval.AddVertex(startPoint.pos, startPoint.color);
-		oval.AddVertex(endPoint.pos, endPoint.color);
-		oval.AddVertex(center.pos, center.color);
-
+		oval.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
+		
+		oval.AddIndex(0);
+		oval.AddIndex(i);
+		if (i == numberOfSegments) oval.AddIndex(1);
+		else oval.AddIndex(i+1);
 	}
 
 	oval.Initialize(physicalDevice, device, commandPool, graphicsQueue);
@@ -216,4 +312,22 @@ void GP2Scene::DestroyMeshes(const VkDevice& device)
 	{
 		mesh.DestroyMesh(device);
 	}
+}
+
+void GP2Scene::MakeRect(GP2Mesh& mesh, float top, float left, float bottom, float right) const
+{
+	assert((left < right) && "Left is greater than right");
+	assert((top < bottom) && "Top is greater than bottom");
+	constexpr int nrOfVertices{ 4 };
+	constexpr int nrOfIndices{ 6 };
+
+	Vertex2D vertices[nrOfVertices]{ {glm::vec2{left, top},glm::vec3{1.0f,0.0f,0.0f}},
+						{glm::vec2{right, top},glm::vec3{0.0f,1.0f,0.0f}},
+						{glm::vec2{right, bottom},glm::vec3{1.0f,0.0f,0.0f}},
+						{glm::vec2{left, bottom},glm::vec3{0.0f,0.0f,1.0f}} };
+
+	int indices[nrOfIndices]{ 0,1,2,0,2,3 };
+
+	for (int i = 0; i < nrOfVertices; i++) mesh.AddVertex(vertices[i].pos, vertices[i].color);
+	for (int i = 0; i < nrOfIndices; i++) mesh.AddIndex(indices[i]);
 }

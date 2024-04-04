@@ -21,5 +21,6 @@ public:
 	void Draw(const VkCommandBuffer& cmdBuffer) const;
 	void DestroyMeshes(const VkDevice& device);
 private:
+	void MakeRect(GP2Mesh& mesh, float top, float left, float bottom, float right) const;
 	std::vector<GP2Mesh> m_VecMeshes;
 };

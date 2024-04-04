@@ -20,10 +20,13 @@ public:
 
 	VkRenderPass GetRenderPass() const;
 	VkPipeline GetGraphicsPipeline() const;
+	VkPipelineLayout GetPipelineLayout() const;
 	
+protected:
+
+	virtual void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat);
+	virtual void CreateGraphicsPipeline(const VkDevice& device, GP2Shader& shader);
 private:
-	void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat);
-	void CreateGraphicsPipeline(const VkDevice& device, GP2Shader& shader);
 
 	VkPipelineLayout m_PipelineLayout;
 	VkPipeline m_GraphicsPipeline;

@@ -9,7 +9,7 @@ class GP2CommandPool;
 class GP2Mesh
 {
 public:
-	GP2Mesh() : m_VertexBuffer{}, m_StagingBuffer{}, m_VecVertices {}
+	GP2Mesh() : m_VertexBuffer{}, m_IndexBuffer{}, m_VecVertices{}, m_VecIndices{}
 	{}
 	~GP2Mesh() = default;
 
@@ -25,11 +25,16 @@ public:
 	void Draw(const VkCommandBuffer& cmdBuffer) const;
 
 	void AddVertex(glm::vec2 pos, glm::vec3 color);
+	void AddIndex(uint16_t index);
 
 private:
 
-	void CopyBuffer(const VkDevice& device, const GP2CommandPool& commandPool, VkDeviceSize size, VkQueue graphicsQueue);
+	void CopyBuffer(const VkDevice& device, const GP2CommandPool& commandPool, VkDeviceSize size, VkQueue graphicsQueue, VkBuffer src, VkBuffer dst);
+
 	GP2Buffer m_VertexBuffer;
-	GP2Buffer m_StagingBuffer;
-	std::vector<Vertex> m_VecVertices;
+	GP2Buffer m_IndexBuffer;
+	std::vector<Vertex2D> m_VecVertices;
+	std::vector<uint16_t> m_VecIndices;
+	
+	//VertexConstant m_VertexConstant;
 };

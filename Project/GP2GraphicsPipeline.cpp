@@ -25,6 +25,11 @@ VkPipeline GP2GraphicsPipeline::GetGraphicsPipeline() const
 	return m_GraphicsPipeline;
 }
 
+VkPipelineLayout GP2GraphicsPipeline::GetPipelineLayout() const
+{
+	return m_PipelineLayout;
+}
+
 void GP2GraphicsPipeline::CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat) {
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
@@ -69,7 +74,7 @@ void GP2GraphicsPipeline::CreateGraphicsPipeline(const VkDevice& device, GP2Shad
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -104,8 +109,8 @@ void GP2GraphicsPipeline::CreateGraphicsPipeline(const VkDevice& device, GP2Shad
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0;
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &shader.GetDescriptorSetLayout();
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");

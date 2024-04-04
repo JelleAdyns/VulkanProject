@@ -24,8 +24,22 @@ void GP2Buffer::CreateBuffer(const VkDevice& device, const VkPhysicalDevice& phy
 	}
 
 	vkBindBufferMemory(device, m_Buffer, m_BufferMemory, 0);
+
+	m_DeviceSize = size;
 }
 
+//GP2Buffer::GP2Buffer(const VkDevice& device, const VkPhysicalDevice& physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+//{
+//}
+void GP2Buffer::Upload(VertexUBO& ubo)
+{
+	memcpy(m_UniformBufferMapped, &ubo, m_DeviceSize);
+}
+
+void GP2Buffer::Map(const VkDevice& device)
+{
+	vkMapMemory(device, m_BufferMemory, 0, m_DeviceSize, 0, &m_UniformBufferMapped);
+}
 const VkBuffer& GP2Buffer::GetVkBuffer() const
 {
 	return m_Buffer;
@@ -40,6 +54,18 @@ void GP2Buffer::DestroyBuffer(const VkDevice& device)
 {
 	vkDestroyBuffer(device, m_Buffer, nullptr);
 	vkFreeMemory(device, m_BufferMemory, nullptr);
+}
+
+void GP2Buffer::BindAsVertexBuffer(const VkCommandBuffer& commandBuffer) const
+{
+	VkBuffer vertexBuffers[] = { m_Buffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+}
+
+void GP2Buffer::BindAsIndexBuffer(const VkCommandBuffer& commandBuffer) const
+{
+	vkCmdBindIndexBuffer(commandBuffer, m_Buffer, 0, VK_INDEX_TYPE_UINT16);
 }
 
 uint32_t GP2Buffer::FindMemoryType(const VkPhysicalDevice& physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties) const

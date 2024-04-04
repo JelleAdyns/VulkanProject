@@ -21,6 +21,7 @@
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
 #include "GP2GraphicsPipeline.h"
+#include "GP2DescriptorPool.h"
 #include "Vertex.h"
 
 
@@ -72,7 +73,9 @@ private:
 		createImageViews();
 		
 		// week 03
-		m_Shader.Init(device);
+		m_Shader.Init(device, physicalDevice);
+		m_Shader.CreateDescriptorSetLayout(device);
+		m_Shader.CreateDescriptorSets(device);
 		m_Pipeline.Initialize(device, swapChainImageFormat, m_Shader);
 		createFrameBuffers();
 		// week 02
@@ -80,8 +83,8 @@ private:
 		m_CommandPool.Initialize(device, findQueueFamilies(physicalDevice));
 
 		m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, physicalDevice, device, m_CommandPool, graphicsQueue);
-		m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, physicalDevice, device, m_CommandPool, graphicsQueue);
-		m_Scene.AddOval(0, 0.5, .5f, 0.5f, 30, physicalDevice, device, m_CommandPool, graphicsQueue);
+		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, physicalDevice, device, m_CommandPool, graphicsQueue);
+		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, physicalDevice, device, m_CommandPool, graphicsQueue);
 
 		m_CommandBuffer = m_CommandPool.createCommandBuffer(device);
 
@@ -103,7 +106,6 @@ private:
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
 
-		//vkDestroyCommandPool(device, commandPool, nullptr);
 		m_CommandPool.DestroyCommandPool(device);
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -120,6 +122,9 @@ private:
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
 
+		//m_DescriptorPool.DestroyPool(device);
+		m_Shader.DestroyUniformObjects(device);
+
 		m_Scene.DestroyMeshes(device);
 
 		vkDestroyDevice(device, nullptr);
@@ -131,17 +136,11 @@ private:
 		glfwTerminate();
 	}
 
-	
-
-	
-
 	void createSurface() {
 		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create window surface!");
 		}
 	}
-
-	
 
 	// Week 01: 
 	// Actual window

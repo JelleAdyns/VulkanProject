@@ -46,14 +46,16 @@ void VulkanBase::DrawFrame() {
 		//recreateSwapChain();
 		return;
 	}
-
+	
 	vkResetFences(device, 1, &inFlightFence);
 
 	m_CommandBuffer.reset();
 	m_CommandBuffer.BeginRecordBuffer();
-	// recordCommandBuffer in Week02.cpp
+	m_Shader.BindDescriptorSet(m_CommandBuffer.GetVkCommandBuffer(), m_Pipeline.GetPipelineLayout(), 0);
 	RecordCommandBuffer(m_CommandBuffer.GetVkCommandBuffer(), imageIndex);
 	m_CommandBuffer.EndRecordBuffer();
+
+	m_Shader.UpdateUniformBuffer(imageIndex, swapChainExtent.width / (float)swapChainExtent.height, 45.f);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
