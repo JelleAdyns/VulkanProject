@@ -51,7 +51,7 @@ struct SwapChainSupportDetails {
 class VulkanBase {
 public:
 	void run() {
-		initWindow();
+		InitWindow();
 		initVulkan();
 		mainLoop();
 		cleanup();
@@ -60,17 +60,17 @@ public:
 private:
 	void initVulkan() {
 		// week 06
-		createInstance();
-		setupDebugMessenger();
-		createSurface();
+		CreateInstance();
+		SetupDebugMessenger();
+		CreateSurface();
 
 		// week 05
-		pickPhysicalDevice();
-		createLogicalDevice();
+		PickPhysicalDevice();
+		CreateLogicalDevice();
 
 		// week 04 
-		createSwapChain();
-		createImageViews();
+		CreateSwapChain();
+		CreateImageViews();
 		
 		// week 03
 		m_Shader.Init(device, physicalDevice);
@@ -80,16 +80,16 @@ private:
 		createFrameBuffers();
 		// week 02
 
-		m_CommandPool.Initialize(device, findQueueFamilies(physicalDevice));
+		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
 		m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, physicalDevice, device, m_CommandPool, graphicsQueue);
 		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, physicalDevice, device, m_CommandPool, graphicsQueue);
 		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, physicalDevice, device, m_CommandPool, graphicsQueue);
 
-		m_CommandBuffer = m_CommandPool.createCommandBuffer(device);
+		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 
 		// week 06
-		createSyncObjects();
+		CreateSyncObjects();
 	}
 
 	void mainLoop() {
@@ -136,7 +136,7 @@ private:
 		glfwTerminate();
 	}
 
-	void createSurface() {
+	void CreateSurface() {
 		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create window surface!");
 		}
@@ -149,7 +149,7 @@ private:
 	// with the correct internal state.
 
 	GLFWwindow* window;
-	void initWindow();
+	void InitWindow();
 
 	GP2Shader m_Shader{"shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 
@@ -157,7 +157,7 @@ private:
 	// Queue families
 	// CommandBuffer concept
 
-	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	GP2CommandPool m_CommandPool{};
@@ -172,7 +172,9 @@ private:
 
 	GP2GraphicsPipeline m_Pipeline{};
 	
-	void createFrameBuffers();
+	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
+	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);
+	void CreateFrameBuffers();
 
 	// Week 04
 	// Swap chain and image view support
@@ -198,9 +200,9 @@ private:
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 	
-	void pickPhysicalDevice();
-	bool isDeviceSuitable(VkPhysicalDevice device);
-	void createLogicalDevice();
+	void PickPhysicalDevice();
+	bool IsDeviceSuitable(VkPhysicalDevice device);
+	void CreateLogicalDevice();
 
 	// Week 06
 	// Main initialization
@@ -214,13 +216,13 @@ private:
 	VkSemaphore renderFinishedSemaphore;
 	VkFence inFlightFence;
 
-	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void setupDebugMessenger();
-	std::vector<const char*> getRequiredExtensions();
-	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-	void createInstance();
+	void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void SetupDebugMessenger();
+	std::vector<const char*> GetRequiredExtensions();
+	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+	void CreateInstance();
 
-	void createSyncObjects();
+	void CreateSyncObjects();
 	void DrawFrame();
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {

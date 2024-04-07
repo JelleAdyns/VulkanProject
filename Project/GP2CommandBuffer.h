@@ -7,11 +7,6 @@ class GP2CommandBuffer final
 public:
 
 	GP2CommandBuffer() = default;
-	~GP2CommandBuffer() = default;
-	GP2CommandBuffer(const GP2CommandBuffer& other) = default;
-	GP2CommandBuffer(GP2CommandBuffer&& other) noexcept = default;
-	GP2CommandBuffer& operator=(const GP2CommandBuffer& other) = default;
-	GP2CommandBuffer& operator=(GP2CommandBuffer&& other) noexcept = default;
 
 	void GP2CommandBuffer::submit(VkSubmitInfo& info)const;
 	void BeginRecordBuffer();

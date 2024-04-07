@@ -2,7 +2,7 @@
 
 
 
-QueueFamilyIndices VulkanBase::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice device) {
 	QueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;

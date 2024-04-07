@@ -22,7 +22,7 @@ public:
 
 	const VkCommandPool& GetCommandPool() const{ return m_CommandPool; }
 	void DestroyCommandPool(const VkDevice& device);
-	GP2CommandBuffer createCommandBuffer(const VkDevice& device) const;
+	GP2CommandBuffer CreateCommandBuffer(const VkDevice& device) const;
 private:
 
 	VkCommandPool m_CommandPool;

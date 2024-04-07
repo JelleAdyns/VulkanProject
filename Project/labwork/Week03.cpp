@@ -1,6 +1,7 @@
 #include "vulkanbase/VulkanBase.h"
 
 void VulkanBase::createFrameBuffers() {
+void VulkanBase::CreateFrameBuffers() {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
 		VkImageView attachments[] = {

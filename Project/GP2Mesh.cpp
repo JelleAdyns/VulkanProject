@@ -64,7 +64,7 @@ void GP2Mesh::AddIndex(uint16_t index)
 
 void GP2Mesh::CopyBuffer(const VkDevice& device, const GP2CommandPool& commandPool, VkDeviceSize size, VkQueue graphicsQueue, VkBuffer src, VkBuffer dst)
 {
-	GP2CommandBuffer cmdBuffer = commandPool.createCommandBuffer(device);
+	GP2CommandBuffer cmdBuffer = commandPool.CreateCommandBuffer(device);
 
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

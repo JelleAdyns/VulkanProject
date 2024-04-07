@@ -12,7 +12,7 @@ void GP2CommandPool::Initialize(const VkDevice& device, const QueueFamilyIndices
 	}
 }
 
-GP2CommandBuffer GP2CommandPool::createCommandBuffer(const VkDevice& device) const{
+GP2CommandBuffer GP2CommandPool::CreateCommandBuffer(const VkDevice& device) const{
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.commandPool = m_CommandPool;
