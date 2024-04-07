@@ -52,7 +52,32 @@ void VulkanBase::DrawFrame() {
 	m_CommandBuffer.reset();
 	m_CommandBuffer.BeginRecordBuffer();
 	m_Shader.BindDescriptorSet(m_CommandBuffer.GetVkCommandBuffer(), m_Pipeline.GetPipelineLayout(), 0);
-	RecordCommandBuffer(m_CommandBuffer.GetVkCommandBuffer(), imageIndex);
+
+	BeginRenderPass(m_CommandBuffer, swapChainFramebuffers[imageIndex], swapChainExtent);
+
+	vkCmdBindPipeline(m_CommandBuffer.GetVkCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline.GetGraphicsPipeline());
+
+
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)swapChainExtent.width;
+	viewport.height = (float)swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(m_CommandBuffer.GetVkCommandBuffer(), 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = { 0, 0 };
+	scissor.extent = swapChainExtent;
+	vkCmdSetScissor(m_CommandBuffer.GetVkCommandBuffer(), 0, 1, &scissor);
+
+	//drawScene();
+	m_Scene.Draw(m_CommandBuffer.GetVkCommandBuffer());
+
+
+	EndRenderPass(m_CommandBuffer);
 	m_CommandBuffer.EndRecordBuffer();
 
 	m_Shader.UpdateUniformBuffer(imageIndex, swapChainExtent.width / (float)swapChainExtent.height, 45.f);
@@ -89,9 +114,9 @@ void VulkanBase::DrawFrame() {
 	presentInfo.pImageIndices = &imageIndex;
 
 	result = vkQueuePresentKHR(presentQueue, &presentInfo);
-	/*if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-		recreateSwapChain();
-	}*/
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		RecreateSwapChain();
+	}
 }
 
 bool checkValidationLayerSupport() {

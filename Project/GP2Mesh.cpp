@@ -53,7 +53,7 @@ void GP2Mesh::Draw(const VkCommandBuffer& cmdBuffer) const
 	vkCmdDrawIndexed(cmdBuffer, static_cast<uint16_t>(m_VecIndices.size()), 1, 0, 0, 0);
 }
 
-void GP2Mesh::AddVertex(glm::vec2 pos, glm::vec3 color)
+void GP2Mesh::AddVertex(glm::vec3 pos, glm::vec3 color)
 {
 	m_VecVertices.push_back(Vertex2D{ pos, color });
 }

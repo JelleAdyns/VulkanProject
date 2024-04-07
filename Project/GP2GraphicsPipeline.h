@@ -1,5 +1,6 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
+
 class GP2Shader;
 class GP2GraphicsPipeline
 {
@@ -14,7 +15,7 @@ public:
 	GP2GraphicsPipeline& operator=(GP2GraphicsPipeline&& other) noexcept = delete;
 
 
-	void Initialize(const VkDevice& device, const VkFormat& swapChainImageFormat, GP2Shader& shader);
+	void Initialize(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat, GP2Shader& shader);
 
 	void Destroy(const VkDevice& device);
 
@@ -24,7 +25,7 @@ public:
 	
 protected:
 
-	virtual void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat);
+	virtual void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
 	virtual void CreateGraphicsPipeline(const VkDevice& device, GP2Shader& shader);
 private:
 
