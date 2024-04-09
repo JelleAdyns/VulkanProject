@@ -82,10 +82,11 @@ private:
 		m_Pipeline.Initialize(device, swapChainImageFormat, FindDepthFormat(), m_Shader);
 		
 		// week 02
-		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-4.f});
+		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-50.f});
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
 		//m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, physicalDevice, device, m_CommandPool, graphicsQueue);
+		m_Pipeline.AddMesh("../../../../Project/vehicle.obj",physicalDevice, device, m_CommandPool, graphicsQueue);
 		m_Pipeline.AddRectangle(100.f, 100.f,400.f, 700.f, physicalDevice, device, m_CommandPool, graphicsQueue);
 		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, physicalDevice, device, m_CommandPool, graphicsQueue);
 		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, physicalDevice, device, m_CommandPool, graphicsQueue);

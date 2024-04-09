@@ -19,12 +19,6 @@ public:
 
 	void Initialize(int _width, int _height, float _fovAngle = 90.f, glm::vec3 _origin = { 0.f,0.f,0.f });
 
-
-	void Update();
-
-	void HandleKeyMovement(const uint8_t* keys, float elapsedSec);
-	void TransformForwardVector();
-
 	void KeyEvent(int key, int scancode, int action, int mods);
 	void MouseMove(GLFWwindow* window, double xpos, double ypos);
 	void MouseEvent(GLFWwindow* window, int button, int action, int mods);
@@ -33,6 +27,8 @@ public:
 	const glm::mat4x4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 	const glm::vec3& GetCameraOrigin() const { return m_Origin; }
 private:
+
+	void TransformForwardVector();
 
 	void CalculateViewMatrix();
 	void CalculateProjectionMatrix();
@@ -44,19 +40,18 @@ private:
 	float m_FovAngle{ 90.f };
 	float m_Fov{ glm::tan((m_FovAngle * (glm::pi<float>() / 180.f)) / 2.f) };
 
+	glm::vec3 m_Up{ glm::vec3{0,-1,0} };
+
 	glm::vec3 m_Forward{ glm::vec3{0,0,1} };
-	glm::vec3 m_Up{ glm::vec3{0,1,0} };
 	glm::vec3 m_Right{ glm::vec3{1,0,0} };
 
 	float m_TotalPitch{};
 	float m_TotalYaw{};
-	float m_Radius{};
-	float m_Rotation{};
+
 	glm::vec2 m_DragStart{};
 
 	const float m_TranslateSpeed{ 30.f };
 
-	glm::mat4x4 m_InvViewMatrix{};
 	glm::mat4x4 m_ViewMatrix{};
 	glm::mat4x4 m_ProjectionMatrix{};
 

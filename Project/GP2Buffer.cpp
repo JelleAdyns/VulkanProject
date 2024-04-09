@@ -28,9 +28,6 @@ void GP2Buffer::CreateBuffer(const VkDevice& device, const VkPhysicalDevice& phy
 	m_DeviceSize = size;
 }
 
-//GP2Buffer::GP2Buffer(const VkDevice& device, const VkPhysicalDevice& physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
-//{
-//}
 void GP2Buffer::Upload(VertexUBO& ubo)
 {
 	memcpy(m_UniformBufferMapped, &ubo, m_DeviceSize);

@@ -1,4 +1,5 @@
 #include "GP2GraphicsPipeline3D.h"
+#include "OBJParser.h"
 
 void GP2GraphicsPipeline3D::Initialize(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat, GP2Shader3D& shader)
 {
@@ -175,9 +176,25 @@ void GP2GraphicsPipeline3D::CreateGraphicsPipeline(const VkDevice& device, GP2Sh
 
 	shader.DestroyShaderModules(device);
 }
-void GP2GraphicsPipeline3D::AddMesh(const GP2Mesh<Vertex3D>& gp2Mesh)
+void GP2GraphicsPipeline3D::AddMesh(const std::string& objFile, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const GP2CommandPool& commandPool, VkQueue graphicsQueue)
 {
-	//m_VecMeshes.push_back(gp2Mesh);
+	GP2Mesh<Vertex3D> mesh{};
+	std::vector<Vertex3D> vertices{};
+	std::vector<uint32_t> indices{};
+
+	ParseOBJ(objFile, vertices, indices);
+
+	for (auto& vertex : vertices)
+	{
+		vertex.color = glm::vec3{1.f,1.f,1.f};
+		mesh.AddVertex(vertex);
+
+	}
+	for (const auto& index : indices) mesh.AddIndex(index);
+
+	mesh.UploadBuffers(physicalDevice, device, commandPool, graphicsQueue);
+
+	m_VecMeshes.push_back(std::move(mesh));
 }
 
 void GP2GraphicsPipeline3D::AddRectangle(float top, float left, float bottom, float right,

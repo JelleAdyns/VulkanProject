@@ -43,7 +43,7 @@ set(SOURCES
     "Vertex.h"
     "GP2Buffer.h"
     "GP2Buffer.cpp"
-    "Utils.h"
+    "OBJParser.h"
     "Camera.h"
     "Camera.cpp"
     "GP2DescriptorPool.h"
