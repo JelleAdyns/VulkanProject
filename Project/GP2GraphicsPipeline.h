@@ -1,13 +1,12 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
+#include <array>
 
-class GP2Shader;
 class GP2GraphicsPipeline
 {
 public:
-	GP2GraphicsPipeline() = default;
 
-	~GP2GraphicsPipeline() = default;
+	virtual ~GP2GraphicsPipeline() = default;
 
 	GP2GraphicsPipeline(const GP2GraphicsPipeline& other) = delete;
 	GP2GraphicsPipeline(GP2GraphicsPipeline&& other) noexcept = delete;
@@ -15,18 +14,25 @@ public:
 	GP2GraphicsPipeline& operator=(GP2GraphicsPipeline&& other) noexcept = delete;
 
 
-	void Initialize(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat, GP2Shader& shader);
+	void Destroy(const VkDevice& device)
+	{
+		vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+		vkDestroyRenderPass(device, m_RenderPass, nullptr);
+	}
 
-	void Destroy(const VkDevice& device);
 
-	VkRenderPass GetRenderPass() const;
-	VkPipeline GetGraphicsPipeline() const;
-	VkPipelineLayout GetPipelineLayout() const;
+	VkRenderPass GetRenderPass() const { return m_RenderPass; }
+	VkPipeline GetGraphicsPipeline() const { return m_GraphicsPipeline; }
+	VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 	
 protected:
+	GP2GraphicsPipeline() = default;
 
-	virtual void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
-	virtual void CreateGraphicsPipeline(const VkDevice& device, GP2Shader& shader);
+
+	void SetRenderPass(VkRenderPass renderPass) { m_RenderPass = renderPass; }
+	void SetGraphicsPipeline(VkPipeline graphicsPipeline) { m_GraphicsPipeline = graphicsPipeline; }
+	void SetPipelineLayout(VkPipelineLayout pipelineLayout) { m_PipelineLayout = pipelineLayout; }
 private:
 
 	VkPipelineLayout m_PipelineLayout;

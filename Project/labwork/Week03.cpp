@@ -8,7 +8,7 @@ void VulkanBase::BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffe
 	renderPassInfo.renderPass = m_Pipeline.GetRenderPass();
 	renderPassInfo.framebuffer = currFrameBuffer;
 	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = swapChainExtent;
+	renderPassInfo.renderArea.extent = extent;
 
 	std::array<VkClearValue, 2> clearValues{};
 	clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
@@ -25,10 +25,11 @@ void VulkanBase::EndRenderPass(const GP2CommandBuffer& cmdBuffer)
 	vkCmdEndRenderPass(cmdBuffer.GetVkCommandBuffer());
 }
 
-void VulkanBase::CreateFrameBuffers() {
+void VulkanBase::CreateFrameBuffers()
+{
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		std::array<VkImageView, 2> attachments = {
+		std::vector<VkImageView> attachments = {
 			swapChainImageViews[i],
 			depthImageView
 		};

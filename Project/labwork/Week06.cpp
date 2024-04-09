@@ -43,7 +43,7 @@ void VulkanBase::DrawFrame() {
 	uint32_t imageIndex{};
 	VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-		//recreateSwapChain();
+		RecreateSwapChain();
 		return;
 	}
 	
@@ -74,13 +74,15 @@ void VulkanBase::DrawFrame() {
 	vkCmdSetScissor(m_CommandBuffer.GetVkCommandBuffer(), 0, 1, &scissor);
 
 	//drawScene();
-	m_Scene.Draw(m_CommandBuffer.GetVkCommandBuffer());
+	m_Pipeline.Draw(m_CommandBuffer.GetVkCommandBuffer());
 
 
 	EndRenderPass(m_CommandBuffer);
 	m_CommandBuffer.EndRecordBuffer();
 
-	m_Shader.UpdateUniformBuffer(imageIndex, swapChainExtent.width / (float)swapChainExtent.height, 45.f);
+	//m_Camera.
+	//m_Shader.UpdateUniformBuffer(imageIndex, (float)swapChainExtent.width / (float)swapChainExtent.height, 45.f);
+	m_Shader.UpdateUniformBuffer(imageIndex, m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -119,7 +121,7 @@ void VulkanBase::DrawFrame() {
 	}
 }
 
-bool checkValidationLayerSupport() {
+bool CheckValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -175,7 +177,7 @@ bool VulkanBase::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 void VulkanBase::CreateInstance() {
-	if (enableValidationLayers && !checkValidationLayerSupport()) {
+	if (enableValidationLayers && !CheckValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
 	}
 

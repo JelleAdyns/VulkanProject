@@ -65,7 +65,7 @@ void GP2Buffer::BindAsVertexBuffer(const VkCommandBuffer& commandBuffer) const
 
 void GP2Buffer::BindAsIndexBuffer(const VkCommandBuffer& commandBuffer) const
 {
-	vkCmdBindIndexBuffer(commandBuffer, m_Buffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, m_Buffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
 uint32_t GP2Buffer::FindMemoryType(const VkPhysicalDevice& physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties) const

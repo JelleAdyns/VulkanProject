@@ -1,16 +1,11 @@
 #include "GP2Shader.h"
-//#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
-#include <chrono>
 
 
 void GP2Shader::Init(const VkDevice& device, const VkPhysicalDevice& physicalDevice)
 {
-	m_VecShadersStageInfos.push_back(createFragmentShaderInfo(device));
-	m_VecShadersStageInfos.push_back(createVertexShaderInfo(device));
+	m_VecShadersStageInfos.push_back(CreateFragmentShaderInfo(device));
+	m_VecShadersStageInfos.push_back(CreateVertexShaderInfo(device));
 	m_UniformBuffer.CreateBuffer(device, physicalDevice, sizeof(VertexUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	m_UniformBuffer.Map(device);
 
@@ -32,17 +27,11 @@ void GP2Shader::DestroyUniformObjects(const VkDevice& device)
 	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	m_DescriptorPool->DestroyPool(device);
 }
-void GP2Shader::UpdateUniformBuffer(uint32_t currentImage, float aspectRatio, float fov)
+void GP2Shader::UploadUBOMatrix(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection)
 {
-	static auto startTime = std::chrono::high_resolution_clock::now();
-
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-	m_UBOSrc.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_UBOSrc.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_UBOSrc.proj = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 10.0f);
-	m_UBOSrc.proj[1].y *= -1;
+	m_UBOSrc.model = model;
+	m_UBOSrc.view = view;
+	m_UBOSrc.proj = projection;
 
 	m_UniformBuffer.Upload(m_UBOSrc);
 }
@@ -72,11 +61,20 @@ void GP2Shader::CreateDescriptorSetLayout(const VkDevice& vkDevice)
 		throw std::runtime_error("failed to create descriptor set layout!");
 	}
 }
+VkPipelineInputAssemblyStateCreateInfo GP2Shader::CreateInputAssemblyStateInfo()
+{
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.primitiveRestartEnable = VK_FALSE;
+	return inputAssembly;
+}
 
-VkPipelineShaderStageCreateInfo GP2Shader::createFragmentShaderInfo(const VkDevice& device)
+
+VkPipelineShaderStageCreateInfo GP2Shader::CreateFragmentShaderInfo(const VkDevice& device)
 {
 	std::vector<char> fragShaderCode = readFile(m_FragmentShaderFile);
-	VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
+	VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -87,10 +85,10 @@ VkPipelineShaderStageCreateInfo GP2Shader::createFragmentShaderInfo(const VkDevi
 	return fragShaderStageInfo;
 }
 
-VkPipelineShaderStageCreateInfo GP2Shader::createVertexShaderInfo(const VkDevice& device)
+VkPipelineShaderStageCreateInfo GP2Shader::CreateVertexShaderInfo(const VkDevice& device)
 {
 	std::vector<char> vertShaderCode = readFile(m_VertexShaderFile);
-	VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
+	VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -100,28 +98,7 @@ VkPipelineShaderStageCreateInfo GP2Shader::createVertexShaderInfo(const VkDevice
 	return vertShaderStageInfo;
 }
 
-VkPipelineVertexInputStateCreateInfo GP2Shader::createVertexInputStateInfo()
-{
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{ };
-
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributeDescriptions.size());
-	vertexInputInfo.pVertexBindingDescriptions = &m_InputBinding;
-	vertexInputInfo.pVertexAttributeDescriptions = m_AttributeDescriptions.data() ;
-	return vertexInputInfo;
-}
-
-VkPipelineInputAssemblyStateCreateInfo GP2Shader::createInputAssemblyStateInfo()
-{
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	inputAssembly.primitiveRestartEnable = VK_FALSE;
-	return inputAssembly;
-}
-
-VkShaderModule GP2Shader::createShaderModule(const VkDevice& device, const std::vector<char>& code)
+VkShaderModule GP2Shader::CreateShaderModule(const VkDevice& device, const std::vector<char>& code)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
