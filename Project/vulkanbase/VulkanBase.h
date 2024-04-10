@@ -100,14 +100,18 @@ private:
 		};
 		
 		m_Pipeline3D.Initialize(vulkanContext, swapChainImageFormat, FindDepthFormat());
+		m_Pipeline2D.Initialize(vulkanContext, swapChainImageFormat, FindDepthFormat());
 		
 		// week 02
-		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-50.f});
+		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
 		//m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, m_MeshContext);
-		m_Pipeline3D.AddMesh("Resources/vehicle.obj",meshContext);
-		m_Pipeline3D.AddRectangle(100.f, 100.f,400.f, 700.f, meshContext);
+		m_Pipeline3D.AddMesh(CreateMesh("Resources/vehicle.obj", meshContext));
+		m_Pipeline3D.AddMesh(CreateMesh("Resources/tuktuk.obj", meshContext));
+		//m_Pipeline3D.AddRectangle(100.f, 100.f,400.f, 700.f, meshContext);
+		m_Pipeline2D.AddMesh(CreateRectangle(100.f, 100.f, 400.f, 700.f, meshContext));
+		m_Pipeline2D.AddMesh(CreateRoundedRectangle(0,0, HEIGHT, WIDTH, 100.f, 150.f, 20, meshContext));
 		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, m_MeshContext);
 		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, m_MeshContext);
 
@@ -132,6 +136,7 @@ private:
 		CleanupSwapChain();
 
 		m_Pipeline3D.Destroy(device);
+		m_Pipeline2D.Destroy(device);
 		vkDestroyRenderPass(device, m_RenderPass, nullptr);
 
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
@@ -145,6 +150,7 @@ private:
 
 		//m_Shader.DestroyUniformObjects(device);
 		m_Pipeline3D.DestroyMeshes(device);
+		m_Pipeline2D.DestroyMeshes(device);
 
 		vkDestroyDevice(device, nullptr);
 
@@ -190,6 +196,7 @@ private:
 
 	VkRenderPass m_RenderPass{};
 	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };
+	GP2GraphicsPipeline<Vertex2D> m_Pipeline2D{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 
 	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
 	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);

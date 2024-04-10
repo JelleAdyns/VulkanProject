@@ -6,6 +6,7 @@
 #include "GP2CommandBuffer.h"
 #include <vector>
 #include "Vertex.h"
+#include "OBJParser.h"
 
 class GP2CommandPool;
 
@@ -17,10 +18,6 @@ public:
 	GP2Mesh() = default;
 	~GP2Mesh() = default;
 
-	GP2Mesh(const GP2Mesh& other) = delete;
-	GP2Mesh(GP2Mesh&& other) noexcept = default;
-	GP2Mesh& operator=(const GP2Mesh& other) = delete;
-	GP2Mesh& operator=(GP2Mesh&& other) noexcept = default;
 
 	void DestroyMesh(const VkDevice& device);
 	void Draw(VkPipelineLayout pipelineLayout, const VkCommandBuffer& cmdBuffer) const;
@@ -149,4 +146,316 @@ template<typename VertexType>
 inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 {
 	m_VertexConstant = meshData;
+}
+
+
+
+static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext)
+{
+
+	GP2Mesh<Vertex3D> mesh{};
+	std::vector<Vertex3D> vertices{};
+	std::vector<uint32_t> indices{};
+
+	ParseOBJ(objFile, vertices, indices);
+
+	for (auto& vertex : vertices)
+	{
+		vertex.color = glm::vec3{ 1.f,1.f,1.f };
+		mesh.AddVertex(vertex);
+	}
+	for (const auto& index : indices) mesh.AddIndex(index);
+
+	mesh.UploadBuffers(meshContext);
+
+	return mesh;
+	
+}
+
+static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext)
+{
+
+	assert((left < right) && "Left is greater than right");
+	assert((top < bottom) && "Top is greater than bottom");
+	GP2Mesh<Vertex2D> rect;
+	constexpr int nrOfVertices{ 4 };
+	constexpr int nrOfIndices{ 6 };
+
+	Vertex2D vertices[nrOfVertices]{ {{left, top}, glm::vec3{1.0f,0.0f,0.0f}},
+						{{right, top}, glm::vec3{0.0f,1.0f,0.0f}},
+						{{right, bottom}, glm::vec3{1.0f,0.0f,0.0f}},
+						{{left, bottom}, glm::vec3{0.0f,0.0f,1.0f}} };
+
+	int indices[nrOfIndices]{ 0,1,2,0,2,3 };
+
+	for (int i = 0; i < nrOfVertices; i++) rect.AddVertex(vertices[i]);
+	for (int i = 0; i < nrOfIndices; i++) rect.AddIndex(indices[i]);
+	
+	rect.UploadBuffers(meshContext);
+
+	return rect;
+}
+
+static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const MeshContext& meshContext)
+{
+
+	assert((left < right) && "Left is greater than right");
+	assert((top < bottom) && "Top is greater than bottom");
+	assert((radiusX > 0 && radiusY > 0) && "Radius is less or equal than 0");
+
+	//	    LAYOUT
+	// 
+	//	 ---4---5---
+	//	/	|	|	\
+	//	6---0---1---8
+	//	|	|	|	|
+	//	7---3---2---9
+	//	\	|	|	/
+	//	 ---10-11---
+
+	int currMaxIndex{ -1 };
+	GP2Mesh<Vertex2D> rect{};
+
+	//MiddleRect
+	Vertex2D verticesMiddleRect[4]{};
+	verticesMiddleRect[0] = { glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f} };
+	verticesMiddleRect[1] = { glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f} };
+	verticesMiddleRect[2] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f} };
+	verticesMiddleRect[3] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f} };
+
+	rect.AddVertex(verticesMiddleRect[0]);
+	rect.AddVertex(verticesMiddleRect[1]);
+	rect.AddVertex(verticesMiddleRect[2]);
+	rect.AddVertex(verticesMiddleRect[3]);
+	currMaxIndex += 4;
+
+	rect.AddIndex(0);
+	rect.AddIndex(1);
+	rect.AddIndex(2);
+
+	rect.AddIndex(0);
+	rect.AddIndex(2);
+	rect.AddIndex(3);
+
+	//TopRect
+	Vertex2D verticesTopRect[2]{};
+	verticesTopRect[0] = { glm::vec2{left + radiusX, top},glm::vec3{0.0f,0.0f,1.0f} };
+	verticesTopRect[1] = { glm::vec2{right - radiusX, top},glm::vec3{1.0f,0.0f,0.0f} };
+
+	rect.AddVertex(verticesTopRect[0]);
+	rect.AddVertex(verticesTopRect[1]);
+	currMaxIndex += 2;
+
+	rect.AddIndex(4);
+	rect.AddIndex(5);
+	rect.AddIndex(1);
+
+	rect.AddIndex(4);
+	rect.AddIndex(1);
+	rect.AddIndex(0);
+
+	//LeftRect
+	Vertex2D verticesLeftRect[2]{};
+	verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+	verticesLeftRect[1] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+
+	rect.AddVertex(verticesLeftRect[0]);
+	rect.AddVertex(verticesLeftRect[1]);
+	currMaxIndex += 2;
+
+	rect.AddIndex(6);
+	rect.AddIndex(0);
+	rect.AddIndex(3);
+
+	rect.AddIndex(6);
+	rect.AddIndex(3);
+	rect.AddIndex(7);
+
+	//RightRect
+	Vertex2D verticesRightRect[2]{};
+	verticesRightRect[0] = { glm::vec2{ right, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+	verticesRightRect[1] = { glm::vec2{ right, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f } };
+
+	rect.AddVertex(verticesRightRect[0]);
+	rect.AddVertex(verticesRightRect[1]);
+	currMaxIndex += 2;
+
+	rect.AddIndex(1);
+	rect.AddIndex(8);
+	rect.AddIndex(9);
+
+	rect.AddIndex(1);
+	rect.AddIndex(9);
+	rect.AddIndex(2);
+
+	//BottomRect
+	Vertex2D verticesBottomRect[2]{};
+	verticesBottomRect[0] = { glm::vec2{ left + radiusX, bottom },glm::vec3{0.0f,0.0f,1.0f} };
+	verticesBottomRect[1] = { glm::vec2{ right - radiusX, bottom },glm::vec3{1.0f,0.0f,0.0f } };
+
+	rect.AddVertex(verticesBottomRect[0]);
+	rect.AddVertex(verticesBottomRect[1]);
+	currMaxIndex += 2;
+
+	rect.AddIndex(3);
+	rect.AddIndex(2);
+	rect.AddIndex(11);
+
+	rect.AddIndex(3);
+	rect.AddIndex(11);
+	rect.AddIndex(10);
+
+
+
+	//CORNERS
+	Vertex2D currEdgeVertex;
+	constexpr float pi = 3.14159265359f;
+	float radians = pi / 2 / numberOfSegmentsPerCorner;
+
+	//TopLeftCorner
+
+	rect.AddIndex(0);
+	rect.AddIndex(6);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[0].pos.x + radiusX * glm::cos(radians * i + pi);
+		currEdgeVertex.pos.y = verticesMiddleRect[0].pos.y + radiusY * glm::sin(radians * i + pi);
+
+		rect.AddVertex(currEdgeVertex);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(0);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(0);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(4);
+
+
+	//TopRightCorner
+	rect.AddIndex(1);
+	rect.AddIndex(5);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[1].pos.x + radiusX * glm::cos(radians * i - pi / 2);
+		currEdgeVertex.pos.y = verticesMiddleRect[1].pos.y + radiusY * glm::sin(radians * i - pi / 2);
+
+		rect.AddVertex(currEdgeVertex);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(1);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(1);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(8);
+
+
+	//BottomLeftCorner
+	rect.AddIndex(3);
+	rect.AddIndex(10);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[3].pos.x + radiusX * glm::cos(radians * i + pi / 2);
+		currEdgeVertex.pos.y = verticesMiddleRect[3].pos.y + radiusY * glm::sin(radians * i + pi / 2);
+
+		rect.AddVertex(currEdgeVertex);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(3);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(3);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(7);
+
+
+	//BottomRightCorner
+	rect.AddIndex(2);
+	rect.AddIndex(9);
+
+	currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
+	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
+	{
+		currEdgeVertex.pos.x = verticesMiddleRect[2].pos.x + radiusX * glm::cos(radians * i);
+		currEdgeVertex.pos.y = verticesMiddleRect[2].pos.y + radiusY * glm::sin(radians * i);
+
+		rect.AddVertex(currEdgeVertex);
+		++currMaxIndex;
+
+		//triangle
+		rect.AddIndex(currMaxIndex);
+		if (i > 1)
+		{
+			rect.AddIndex(2);
+			rect.AddIndex(currMaxIndex - 1);
+		}
+	}
+
+	rect.AddIndex(2);
+	rect.AddIndex(currMaxIndex);
+	rect.AddIndex(11);
+
+
+	rect.UploadBuffers(meshContext);
+	return rect;
+}
+
+static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const MeshContext& meshContext)
+{
+
+	assert((radiusX > 0 && radiusY > 0));
+	constexpr float pi = 3.14159265359f;
+
+	float radians = pi * 2 / numberOfSegments;
+
+	GP2Mesh<Vertex2D> oval;
+
+	Vertex2D center  {glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f}};
+	Vertex2D currEdgeVertex { {}, glm::vec3{0.0f,1.0f,0.0f} };
+
+	oval.AddVertex(center);
+	for (int i = 1; i <= numberOfSegments; i++)
+	{
+		currEdgeVertex.pos.x = centerX + radiusX * glm::cos(radians * i);
+		currEdgeVertex.pos.y = centerY + radiusY * glm::sin(radians * i);
+
+		oval.AddVertex(currEdgeVertex);
+
+		oval.AddIndex(0);
+		oval.AddIndex(i);
+		if (i == numberOfSegments) oval.AddIndex(1);
+		else oval.AddIndex(i+1);
+	}
+
+	oval.UploadBuffers(meshContext);
+	return oval;
 }

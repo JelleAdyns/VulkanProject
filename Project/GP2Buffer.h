@@ -7,10 +7,6 @@ public:
 
 	GP2Buffer() = default;
 	~GP2Buffer() = default;
-	GP2Buffer(const GP2Buffer& other) = default;
-	GP2Buffer(GP2Buffer&& other) noexcept = default;
-	GP2Buffer& operator=(const GP2Buffer& other) = default;
-	GP2Buffer& operator=(GP2Buffer&& other) noexcept = default;
 
 	void CreateBuffer(const VkDevice& device, const VkPhysicalDevice& physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 

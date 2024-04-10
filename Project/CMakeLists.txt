@@ -57,18 +57,18 @@ set(SOURCES
     "Camera.h"
     "Camera.cpp"
     "GP2DescriptorPool.h"
-    "GP2DescriptorPool.cpp"
+    
     "GP2GraphicsPipeline.h" 
-    "GP2GraphicsPipeline2D.h"
-    "GP2GraphicsPipeline2D.cpp"
-    "GP2GraphicsPipeline3D.h"
-    "GP2GraphicsPipeline3D.cpp"
+    
+    
+    
+    
     "GP2Shader.h" 
-    "GP2Shader.cpp"
-    "GP2Shader2D.h" 
-    "GP2Shader2D.cpp" 
-    "GP2Shader3D.h" 
-    "GP2Shader3D.cpp"
+    
+     
+     
+     
+    
     "GP2Mesh.h"  
     "GP2UniformBufferObject.h" 
     

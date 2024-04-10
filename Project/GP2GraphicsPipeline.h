@@ -30,33 +30,23 @@ public:
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 	}
 
-
-
 	VkPipeline GetGraphicsPipeline() const { return m_GraphicsPipeline; }
 	VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 
-
+	void DestroyMeshes(const VkDevice& device);
 	void Initialize(const VulkanContext& vulkanContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
 
+	void AddMesh(const GP2Mesh<VertexType>& mesh);
+
 	void UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex);
-	void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 view, glm::mat4 projection);
+	void UpdateUniformBuffer(glm::mat4 view, glm::mat4 projection);
 	void Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const;
 
-	void AddMesh(const std::string& objFile, const MeshContext& meshContext);
-	void AddRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext);
-	void AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const MeshContext& meshContext);
-	void AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const MeshContext& meshContext);
-	void DestroyMeshes(const VkDevice& device);
+	//template< typename VertexType>
+
 private:
 
-	VkPushConstantRange CreatePushConstantRange()
-	{
-		VkPushConstantRange pushConstantRange = {};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Stage the push constant is accessible from
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(MeshData); // Size of push constant block
-		return pushConstantRange;
-	}
+
 	void Draw(const VkCommandBuffer& cmdBuffer) const;
 
 	VkPipelineLayout m_PipelineLayout{};
@@ -68,6 +58,7 @@ private:
 
 	void MakeRect(GP2Mesh<VertexType>& mesh, float top, float left, float bottom, float right) const;
 	void CreateGraphicsPipeline(const VkDevice& device);
+	VkPushConstantRange CreatePushConstantRange();
 };
 
 
@@ -79,20 +70,25 @@ void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanCont
 	m_Shader.Init(vulkanContext);
 	CreateGraphicsPipeline(vulkanContext.device);
 }
+template<typename VertexType>
+inline void GP2GraphicsPipeline<VertexType>::AddMesh(const GP2Mesh<VertexType>& mesh)
+{
+	m_VecMeshes.push_back(mesh);
+}
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex)
 {
 	m_VecMeshes[meshIndex].SetModelMatrix(MeshData{ model });
 }
 template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 view, glm::mat4 projection)
+void GP2GraphicsPipeline<VertexType>::UpdateUniformBuffer(glm::mat4 view, glm::mat4 projection)
 {
 	m_Shader.UploadUBOMatrix(view, projection);
 }
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const
 {
-	vkCmdBindPipeline(cmdBuffer.GetVkCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, GetGraphicsPipeline());
+	vkCmdBindPipeline(cmdBuffer.GetVkCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -202,7 +198,7 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	pipelineInfo.pMultisampleState = &multisampling;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = GetPipelineLayout();
+	pipelineInfo.layout = m_PipelineLayout;
 	pipelineInfo.renderPass = m_RenderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -216,342 +212,17 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	m_Shader.DestroyShaderModules(device);
 }
 
-template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::AddMesh(const std::string& objFile, const MeshContext& meshContext)
+template<typename VertexType>
+VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange()
 {
-	GP2Mesh<Vertex3D> mesh{};
-	std::vector<Vertex3D> vertices{};
-	std::vector<uint32_t> indices{};
-
-	ParseOBJ(objFile, vertices, indices);
-
-	for (auto& vertex : vertices)
-	{
-		vertex.color = glm::vec3{ 1.f,1.f,1.f };
-		mesh.AddVertex(vertex);
-
-	}
-	for (const auto& index : indices) mesh.AddIndex(index);
-
-	mesh.UploadBuffers(meshContext);
-
-	m_VecMeshes.push_back(std::move(mesh));
+	VkPushConstantRange pushConstantRange = {};
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Stage the push constant is accessible from
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(MeshData); // Size of push constant block
+	return pushConstantRange;
 }
 
-template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::AddRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext)
-{
-	/*GP2Mesh<Vertex2D> rect;
-	MakeRect(rect, top, left, bottom, right);
-	rect.UploadBuffers(physicalDevice, device, commandPool, graphicsQueue);
-	m_VecMeshes.push_back(std::move(rect));*/
-	std::vector<Vertex3D> vertices =
-	{
-		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
-	};
-	std::vector<uint32_t> indices =
-	{
-		0, 1, 2, 2, 3, 0
-	};
 
-	GP2Mesh<Vertex3D> rect{};
-	for (const auto& vertex : vertices)
-		rect.AddVertex(vertex);
-	for (const auto& index : indices)
-		rect.AddIndex(index);
-
-	rect.UploadBuffers(meshContext);
-	m_VecMeshes.push_back(std::move(rect));
-
-
-	vertices =
-	{
-		{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
-	};
-	indices = { 0, 1, 2, 2, 3, 0 };
-
-	GP2Mesh<Vertex3D> rect2;
-	for (const auto& vertex : vertices)
-		rect2.AddVertex(vertex);
-	for (const auto& index : indices)
-		rect2.AddIndex(index);
-
-	rect2.UploadBuffers(meshContext);
-	m_VecMeshes.push_back(std::move(rect2));
-
-}
-
-template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::AddRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const MeshContext& meshContext)
-{
-
-	assert((left < right) && "Left is greater than right");
-	assert((top < bottom) && "Top is greater than bottom");
-	assert((radiusX > 0 && radiusY > 0) && "Radius is less or equal than 0");
-
-	//	    LAYOUT
-	// 
-	//	 ---4---5---
-	//	/	|	|	\
-	//	6---0---1---8
-	//	|	|	|	|
-	//	7---3---2---9
-	//	\	|	|	/
-	//	 ---10-11---
-
-	//int currMaxIndex{-1};
-	//GP2Mesh rect{};
-
-	////MiddleRect
-	//Vertex2D verticesMiddleRect[4]{};
-	//verticesMiddleRect[0] = { glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f} };
-	//verticesMiddleRect[1] = { glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f} };
-	//verticesMiddleRect[2] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f} };
-	//verticesMiddleRect[3] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f} };
-
-	//rect.AddVertex(verticesMiddleRect[0].pos, verticesMiddleRect[0].color);
-	//rect.AddVertex(verticesMiddleRect[1].pos, verticesMiddleRect[1].color);
-	//rect.AddVertex(verticesMiddleRect[2].pos, verticesMiddleRect[2].color);
-	//rect.AddVertex(verticesMiddleRect[3].pos, verticesMiddleRect[3].color);
-	//currMaxIndex += 4;
-
-	//rect.AddIndex(0);
-	//rect.AddIndex(1);
-	//rect.AddIndex(2);
-
-	//rect.AddIndex(0);
-	//rect.AddIndex(2);
-	//rect.AddIndex(3);
-
-	////TopRect
-	//Vertex2D verticesTopRect[2]{};
-	//verticesTopRect[0] = { glm::vec2{left + radiusX, top},glm::vec3{0.0f,0.0f,1.0f} };
-	//verticesTopRect[1] = { glm::vec2{right - radiusX, top},glm::vec3{1.0f,0.0f,0.0f} };
-
-	//rect.AddVertex(verticesTopRect[0].pos, verticesTopRect[0].color);
-	//rect.AddVertex(verticesTopRect[1].pos, verticesTopRect[1].color);
-	//currMaxIndex += 2;
-
-	//rect.AddIndex(4);
-	//rect.AddIndex(5);
-	//rect.AddIndex(1);
-
-	//rect.AddIndex(4);
-	//rect.AddIndex(1);
-	//rect.AddIndex(0);
-
-	////LeftRect
-	//Vertex2D verticesLeftRect[2]{};
-	//verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
-	//verticesLeftRect[1] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f} };
-
-	//rect.AddVertex(verticesLeftRect[0].pos, verticesLeftRect[0].color);
-	//rect.AddVertex(verticesLeftRect[1].pos, verticesLeftRect[1].color);
-	//currMaxIndex += 2;
-
-	//rect.AddIndex(6);
-	//rect.AddIndex(0);
-	//rect.AddIndex(3);
-
-	//rect.AddIndex(6);
-	//rect.AddIndex(3);
-	//rect.AddIndex(7);
-
-	////RightRect
-	//Vertex2D verticesRightRect[2]{};
-	//verticesRightRect[0] = { glm::vec2{ right, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
-	//verticesRightRect[1] = { glm::vec2{ right, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f } };
-
-	//rect.AddVertex(verticesRightRect[0].pos, verticesRightRect[0].color);
-	//rect.AddVertex(verticesRightRect[1].pos, verticesRightRect[1].color);
-	//currMaxIndex += 2;
-
-	//rect.AddIndex(1);
-	//rect.AddIndex(8);
-	//rect.AddIndex(9);
-
-	//rect.AddIndex(1);
-	//rect.AddIndex(9);
-	//rect.AddIndex(2);
-
-	////BottomRect
-	//Vertex2D verticesBottomRect[2]{};
-	//verticesBottomRect[0] = { glm::vec2{ left + radiusX, bottom },glm::vec3{0.0f,0.0f,1.0f} };
-	//verticesBottomRect[1] = { glm::vec2{ right - radiusX, bottom },glm::vec3{1.0f,0.0f,0.0f } };
-
-	//rect.AddVertex(verticesBottomRect[0].pos, verticesBottomRect[0].color);
-	//rect.AddVertex(verticesBottomRect[1].pos, verticesBottomRect[1].color);
-	//currMaxIndex += 2;
-
-	//rect.AddIndex(3);
-	//rect.AddIndex(2);
-	//rect.AddIndex(11);
-
-	//rect.AddIndex(3);
-	//rect.AddIndex(11);
-	//rect.AddIndex(10);
-
-
-
-	////CORNERS
-	//Vertex2D currEdgeVertex;
-	//constexpr float pi = 3.14159265359f;
-	//float radians = pi / 2 / numberOfSegmentsPerCorner;
-
-	////TopLeftCorner
-	//
-	//rect.AddIndex(0);
-	//rect.AddIndex(6);
-
-	//currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
-
-	//for (int i = 1; i < numberOfSegmentsPerCorner; i++)
-	//{
-	//	currEdgeVertex.pos.x = verticesMiddleRect[0].pos.x + radiusX * glm::cos(radians * i + pi);
-	//	currEdgeVertex.pos.y = verticesMiddleRect[0].pos.y + radiusY * glm::sin(radians * i + pi);
-
-	//	rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
-	//	++currMaxIndex;
-
-	//	//triangle
-	//	rect.AddIndex(currMaxIndex);
-	//	if (i > 1)
-	//	{
-	//		rect.AddIndex(0);
-	//		rect.AddIndex(currMaxIndex-1);
-	//	}
-	//}
-
-	//rect.AddIndex(0);
-	//rect.AddIndex(currMaxIndex);
-	//rect.AddIndex(4);
-
-
-	////TopRightCorner
-	//rect.AddIndex(1);
-	//rect.AddIndex(5);
-
-	//currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
-
-	//for (int i = 1; i < numberOfSegmentsPerCorner; i++)
-	//{
-	//	currEdgeVertex.pos.x = verticesMiddleRect[1].pos.x + radiusX * glm::cos(radians * i - pi/2);
-	//	currEdgeVertex.pos.y = verticesMiddleRect[1].pos.y + radiusY * glm::sin(radians * i - pi/2);
-
-	//	rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
-	//	++currMaxIndex;
-
-	//	//triangle
-	//	rect.AddIndex(currMaxIndex);
-	//	if (i > 1)
-	//	{
-	//		rect.AddIndex(1);
-	//		rect.AddIndex(currMaxIndex - 1);
-	//	}
-	//}
-
-	//rect.AddIndex(1);
-	//rect.AddIndex(currMaxIndex);
-	//rect.AddIndex(8);
-
-
-	////BottomLeftCorner
-	//rect.AddIndex(3);
-	//rect.AddIndex(10);
-
-	//currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
-
-	//for (int i = 1; i < numberOfSegmentsPerCorner; i++)
-	//{
-	//	currEdgeVertex.pos.x = verticesMiddleRect[3].pos.x + radiusX * glm::cos(radians * i + pi / 2);
-	//	currEdgeVertex.pos.y = verticesMiddleRect[3].pos.y + radiusY * glm::sin(radians * i + pi / 2);
-
-	//	rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
-	//	++currMaxIndex;
-
-	//	//triangle
-	//	rect.AddIndex(currMaxIndex);
-	//	if (i > 1)
-	//	{
-	//		rect.AddIndex(3);
-	//		rect.AddIndex(currMaxIndex - 1);
-	//	}
-	//}
-
-	//rect.AddIndex(3);
-	//rect.AddIndex(currMaxIndex);
-	//rect.AddIndex(7);
-
-
-	////BottomRightCorner
-	//rect.AddIndex(2);
-	//rect.AddIndex(9);
-
-	//currEdgeVertex.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
-
-	//for (int i = 1; i < numberOfSegmentsPerCorner; i++)
-	//{
-	//	currEdgeVertex.pos.x = verticesMiddleRect[2].pos.x + radiusX * glm::cos(radians * i);
-	//	currEdgeVertex.pos.y = verticesMiddleRect[2].pos.y + radiusY * glm::sin(radians * i);
-
-	//	rect.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
-	//	++currMaxIndex;
-
-	//	//triangle
-	//	rect.AddIndex(currMaxIndex);
-	//	if (i > 1)
-	//	{
-	//		rect.AddIndex(2);
-	//		rect.AddIndex(currMaxIndex - 1);
-	//	}
-	//}
-
-	//rect.AddIndex(2);
-	//rect.AddIndex(currMaxIndex);
-	//rect.AddIndex(11);
-	//
-
-	//rect.Initialize(physicalDevice, device, commandPool, graphicsQueue);
-	//m_VecMeshes.push_back(std::move(rect));
-}
-
-template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::AddOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const MeshContext& meshContext)
-{
-
-	/*assert((radiusX > 0 && radiusY > 0));
-	constexpr float pi = 3.14159265359f;
-
-	float radians = pi * 2 / numberOfSegments;
-
-	GP2Mesh oval;
-
-	Vertex2D center  {glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f}};
-	Vertex2D currEdgeVertex { {}, glm::vec3{0.0f,1.0f,0.0f} };
-
-	oval.AddVertex(center.pos, center.color);
-	for (int i = 1; i <= numberOfSegments; i++)
-	{
-		currEdgeVertex.pos.x = centerX + radiusX * glm::cos(radians * i);
-		currEdgeVertex.pos.y = centerY + radiusY * glm::sin(radians * i);
-
-		oval.AddVertex(currEdgeVertex.pos, currEdgeVertex.color);
-
-		oval.AddIndex(0);
-		oval.AddIndex(i);
-		if (i == numberOfSegments) oval.AddIndex(1);
-		else oval.AddIndex(i+1);
-	}
-
-	oval.Initialize(physicalDevice, device, commandPool, graphicsQueue);
-	m_VecMeshes.push_back(std::move(oval));*/
-}
 
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Draw(const VkCommandBuffer& cmdBuffer) const
@@ -580,10 +251,10 @@ void GP2GraphicsPipeline<VertexType>::MakeRect(GP2Mesh<VertexType>& mesh, float 
 	constexpr int nrOfVertices{ 4 };
 	constexpr int nrOfIndices{ 6 };
 
-	Vertex3D vertices[nrOfVertices]{ {glm::vec3{left, top, 0}, glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec3{right, top, 0}, glm::vec3{0.0f,1.0f,0.0f}},
-						{glm::vec3{right, bottom, 0}, glm::vec3{1.0f,0.0f,0.0f}},
-						{glm::vec3{left, bottom, 0}, glm::vec3{0.0f,0.0f,1.0f}} };
+	VertexType vertices[nrOfVertices]{ {{left, top}, glm::vec3{1.0f,0.0f,0.0f}},
+						{{right, top}, glm::vec3{0.0f,1.0f,0.0f}},
+						{{right, bottom}, glm::vec3{1.0f,0.0f,0.0f}},
+						{{left, bottom}, glm::vec3{0.0f,0.0f,1.0f}} };
 
 	int indices[nrOfIndices]{ 0,1,2,0,2,3 };
 
