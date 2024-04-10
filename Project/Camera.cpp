@@ -22,8 +22,13 @@ void Camera::Initialize(int _width, int _height, float _fovAngle, glm::vec3 _ori
 
 void Camera::CalculateViewMatrix()
 {
-	m_Right = glm::normalize(glm::cross(m_Up, m_Forward));
-	m_ViewMatrix = glm::lookAtLH(m_Origin, m_Origin + m_Forward, m_Up);
+	glm::mat4 finalRotation = glm::rotate(glm::mat4x4(1.f), glm::radians(m_TotalYaw), glm::vec3{ 0,1,0 });
+	finalRotation = glm::rotate(finalRotation, glm::radians(m_TotalPitch), glm::vec3{ 1,0,0 });
+
+	m_Forward = glm::normalize(finalRotation[2]);
+
+	m_Right = glm::normalize(glm::cross(m_UnitY, m_Forward));
+	m_ViewMatrix = glm::lookAtLH(m_Origin, m_Origin + m_Forward, m_UnitY);
 }
 
 void Camera::CalculateProjectionMatrix()
@@ -42,9 +47,9 @@ void Camera::KeyEvent(int key, int scancode, int action, int mods)
 	
 	if (key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Right;
 
-	if (key == GLFW_KEY_E && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_Up;
+	if (key == GLFW_KEY_E && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_UnitY;
 	
-	if (key == GLFW_KEY_Q && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Up;
+	if (key == GLFW_KEY_Q && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_UnitY;
 	
 	if (key == GLFW_KEY_Z && (action == GLFW_REPEAT || action == GLFW_PRESS))
 	{
@@ -62,7 +67,7 @@ void Camera::KeyEvent(int key, int scancode, int action, int mods)
 		CalculateProjectionMatrix();
 		std::cout << m_FovAngle << std::endl;
 	}
-	TransformForwardVector();
+	CalculateViewMatrix();
 }
 void Camera::MouseMove(GLFWwindow* window, double xpos, double ypos)
 {
@@ -70,31 +75,33 @@ void Camera::MouseMove(GLFWwindow* window, double xpos, double ypos)
 	if (state == GLFW_PRESS)
 	{
 		float dx = static_cast<float>(xpos) - m_DragStart.x;
-		if (dx > 0) 
+		if (dx > 0)
 		{
-			m_TotalYaw -= 0.03f;
+			m_TotalYaw -= 1;
 			m_DragStart.x = static_cast<float>(xpos);
 		}
 
 		else if (dx < 0)
 		{
-			m_TotalYaw += 0.03f;
+			m_TotalYaw += 1;
 			m_DragStart.x = static_cast<float>(xpos);
 		}
 
 		float dy = static_cast<float>(ypos) - m_DragStart.y;
-		if (dy > 0) 
+		if (dy > 0)
 		{
-			m_TotalPitch += 0.03f;
+			m_TotalPitch += 1;
 			m_DragStart.y = static_cast<float>(ypos);
 		}
 		else if (dy < 0)
 		{
-			m_TotalPitch -= 0.03f;
+			m_TotalPitch -= 1;
 			m_DragStart.y = static_cast<float>(ypos);
 		}
-		
-		TransformForwardVector();
+
+		if (m_TotalPitch >= 89) m_TotalPitch = 89;
+		if (m_TotalPitch <= -89) m_TotalPitch = -89;
+		CalculateViewMatrix();
 	}
 }
 void Camera::MouseEvent(GLFWwindow* window, int button, int action, int mods)
@@ -105,13 +112,4 @@ void Camera::MouseEvent(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-void Camera::TransformForwardVector()
-{
-	glm::mat4x4 finalRotation = glm::rotate(glm::mat4x4(1.f), m_TotalYaw , glm::vec3{0,1,0 });
-	finalRotation = glm::rotate(finalRotation, m_TotalPitch , glm::vec3{1,0,0});
-		
-	m_Forward = glm::normalize(finalRotation[2]);
-
-	CalculateViewMatrix();
-}
 

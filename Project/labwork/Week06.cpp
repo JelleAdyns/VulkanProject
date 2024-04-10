@@ -1,4 +1,5 @@
 #include "vulkanbase/VulkanBase.h"
+#include <chrono>
 
 void VulkanBase::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {};
@@ -49,40 +50,26 @@ void VulkanBase::DrawFrame() {
 	
 	vkResetFences(device, 1, &inFlightFence);
 
-	m_CommandBuffer.reset();
+	m_CommandBuffer.Reset();
 	m_CommandBuffer.BeginRecordBuffer();
-	m_Shader.BindDescriptorSet(m_CommandBuffer.GetVkCommandBuffer(), m_Pipeline.GetPipelineLayout(), 0);
 
 	BeginRenderPass(m_CommandBuffer, swapChainFramebuffers[imageIndex], swapChainExtent);
 
-	vkCmdBindPipeline(m_CommandBuffer.GetVkCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline.GetGraphicsPipeline());
+	static auto startTime = std::chrono::high_resolution_clock::now();
 
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+	auto model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)swapChainExtent.width;
-	viewport.height = (float)swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(m_CommandBuffer.GetVkCommandBuffer(), 0, 1, &viewport);
-
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = swapChainExtent;
-	vkCmdSetScissor(m_CommandBuffer.GetVkCommandBuffer(), 0, 1, &scissor);
-
-	//drawScene();
-	m_Pipeline.Draw(m_CommandBuffer.GetVkCommandBuffer());
-
+	m_Pipeline3D.UpdateMeshMatrix(model, 0);
+	m_Pipeline3D.UpdateUniformBuffer(imageIndex, m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
+	m_Pipeline3D.Record(m_CommandBuffer, swapChainExtent);
 
 	EndRenderPass(m_CommandBuffer);
 	m_CommandBuffer.EndRecordBuffer();
 
 	//m_Camera.
 	//m_Shader.UpdateUniformBuffer(imageIndex, (float)swapChainExtent.width / (float)swapChainExtent.height, 45.f);
-	m_Shader.UpdateUniformBuffer(imageIndex, m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

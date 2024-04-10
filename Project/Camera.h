@@ -23,12 +23,10 @@ public:
 	void MouseMove(GLFWwindow* window, double xpos, double ypos);
 	void MouseEvent(GLFWwindow* window, int button, int action, int mods);
 
-	const glm::mat4x4& GetViewMatrix() const { return m_ViewMatrix; }
-	const glm::mat4x4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+	const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+	const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 	const glm::vec3& GetCameraOrigin() const { return m_Origin; }
 private:
-
-	void TransformForwardVector();
 
 	void CalculateViewMatrix();
 	void CalculateProjectionMatrix();
@@ -40,7 +38,7 @@ private:
 	float m_FovAngle{ 90.f };
 	float m_Fov{ glm::tan((m_FovAngle * (glm::pi<float>() / 180.f)) / 2.f) };
 
-	glm::vec3 m_Up{ glm::vec3{0,-1,0} };
+	const glm::vec3 m_UnitY{ glm::vec3{0,-1,0} };
 
 	glm::vec3 m_Forward{ glm::vec3{0,0,1} };
 	glm::vec3 m_Right{ glm::vec3{1,0,0} };
@@ -52,8 +50,8 @@ private:
 
 	const float m_TranslateSpeed{ 30.f };
 
-	glm::mat4x4 m_ViewMatrix{};
-	glm::mat4x4 m_ProjectionMatrix{};
+	glm::mat4 m_ViewMatrix{};
+	glm::mat4 m_ProjectionMatrix{};
 
 	int m_Width{};
 	int m_Height{};

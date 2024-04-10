@@ -17,7 +17,8 @@ public:
 	const VkBuffer& GetVkBuffer() const;
 	const VkDeviceMemory& GetVkBufferMemory() const;
 
-	void Upload(VertexUBO& ubo);
+	
+	void Upload(VkDeviceSize typeSize, void* ubo);
 	void Map(const VkDevice& device);
 	
 	void DestroyBuffer(const VkDevice& device);
@@ -28,5 +29,5 @@ private:
 	VkDeviceSize m_DeviceSize;
 	VkBuffer m_Buffer;
 	VkDeviceMemory m_BufferMemory;
-	void* m_UniformBufferMapped;
+	void* m_pDataUniformBuffer;
 };

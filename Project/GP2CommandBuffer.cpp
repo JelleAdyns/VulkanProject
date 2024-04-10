@@ -2,7 +2,7 @@
 #include "GP2CommandPool.h"
 
 
-void GP2CommandBuffer::reset()const 
+void GP2CommandBuffer::Reset()const 
 {
 	 vkResetCommandBuffer(m_CommandBuffer, /*VkCommandBufferResetFlagBits*/ 0);	
 }

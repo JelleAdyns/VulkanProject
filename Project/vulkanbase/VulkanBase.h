@@ -15,44 +15,49 @@
 #include <set>
 #include <limits>
 #include <algorithm>
-#include "GP2Shader2D.h"
-#include "GP2Shader3D.h"
 #include "GP2Mesh.h"
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
-#include "GP2GraphicsPipeline2D.h"
-#include "GP2GraphicsPipeline3D.h"
+#include "GP2GraphicsPipeline.h"
 #include "GP2DescriptorPool.h"
 #include "Vertex.h"
 #include "Camera.h"
+#include "ContextStructs.h"
 
 
-const std::vector<const char*> validationLayers = {
+const std::vector<const char*> validationLayers = 
+{
 	"VK_LAYER_KHRONOS_validation"
 };
 
-const std::vector<const char*> deviceExtensions = {
+const std::vector<const char*> deviceExtensions = 
+{
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-struct QueueFamilyIndices {
+struct QueueFamilyIndices 
+{
 	std::optional<uint32_t> graphicsFamily;
 	std::optional<uint32_t> presentFamily;
 
-	bool isComplete() {
+	bool isComplete()
+	{
 		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
 };
 
-struct SwapChainSupportDetails {
+struct SwapChainSupportDetails 
+{
 	VkSurfaceCapabilitiesKHR capabilities;
 	std::vector<VkSurfaceFormatKHR> formats;
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
-class VulkanBase {
+class VulkanBase 
+{
 public:
-	void run() {
+	void run() 
+	{
 		InitWindow();
 		initVulkan();
 		mainLoop();
@@ -61,7 +66,9 @@ public:
 
 	Camera* GetCamera() { return m_Camera.get(); }
 private:
-	void initVulkan() {
+	void initVulkan() 
+	{
+		
 		// week 06
 		CreateInstance();
 		SetupDebugMessenger();
@@ -76,20 +83,33 @@ private:
 		CreateImageViews();
 		
 		// week 03
-		m_Shader.Init(device, physicalDevice);
-		m_Shader.CreateDescriptorSetLayout(device);
-		m_Shader.CreateDescriptorSets(device);
-		m_Pipeline.Initialize(device, swapChainImageFormat, FindDepthFormat(), m_Shader);
+		CreateRenderPass(device, swapChainImageFormat, FindDepthFormat());
+		MeshContext meshContext
+		{
+			device,
+			physicalDevice,
+			m_CommandPool,
+			graphicsQueue
+		};
+		VulkanContext vulkanContext
+		{
+			device,
+			physicalDevice,
+			m_RenderPass,
+			swapChainExtent
+		};
+		
+		m_Pipeline3D.Initialize(vulkanContext, swapChainImageFormat, FindDepthFormat());
 		
 		// week 02
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-50.f});
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
-		//m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, physicalDevice, device, m_CommandPool, graphicsQueue);
-		m_Pipeline.AddMesh("../../../../Project/vehicle.obj",physicalDevice, device, m_CommandPool, graphicsQueue);
-		m_Pipeline.AddRectangle(100.f, 100.f,400.f, 700.f, physicalDevice, device, m_CommandPool, graphicsQueue);
-		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, physicalDevice, device, m_CommandPool, graphicsQueue);
-		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, physicalDevice, device, m_CommandPool, graphicsQueue);
+		//m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, m_MeshContext);
+		m_Pipeline3D.AddMesh("Resources/vehicle.obj",meshContext);
+		m_Pipeline3D.AddRectangle(100.f, 100.f,400.f, 700.f, meshContext);
+		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, m_MeshContext);
+		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, m_MeshContext);
 
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 		CreateDepthResources();
@@ -111,8 +131,9 @@ private:
 	{
 		CleanupSwapChain();
 
-		m_Pipeline.Destroy(device);
-		
+		m_Pipeline3D.Destroy(device);
+		vkDestroyRenderPass(device, m_RenderPass, nullptr);
+
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
@@ -122,9 +143,8 @@ private:
 		}
 		m_CommandPool.DestroyCommandPool(device);
 
-		m_Shader.DestroyUniformObjects(device);
-
-		m_Pipeline.DestroyMeshes(device);
+		//m_Shader.DestroyUniformObjects(device);
+		m_Pipeline3D.DestroyMeshes(device);
 
 		vkDestroyDevice(device, nullptr);
 
@@ -151,13 +171,12 @@ private:
 	void InitWindow();
 
 	std::unique_ptr<Camera> m_Camera{std::make_unique<Camera>()};
-	GP2Shader3D m_Shader{"shaders/shader.vert.spv", "shaders/shader.frag.spv" };
+	//GP2Shader3D m_Shader{"shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };
 
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
-	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);
+	
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
 	GP2CommandPool m_CommandPool{};
@@ -169,8 +188,12 @@ private:
 	
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
-	GP2GraphicsPipeline3D m_Pipeline{};
-	
+	VkRenderPass m_RenderPass{};
+	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };
+
+	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
+	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);
+	void CreateRenderPass(const VkDevice& device, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
 
 	void CreateFrameBuffers();
 

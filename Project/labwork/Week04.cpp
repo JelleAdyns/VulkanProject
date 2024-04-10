@@ -199,7 +199,11 @@ VkFormat VulkanBase::FindSupportedFormat(const std::vector<VkFormat>& candidates
 		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) return format;
 
 		else throw std::runtime_error("failed to find supported format!");
+
+		
 	}
+
+	return VkFormat{};
 }
 VkFormat VulkanBase::FindDepthFormat() {
 	return FindSupportedFormat(

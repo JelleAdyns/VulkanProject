@@ -72,9 +72,7 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 				// OBJ format uses 1-based arrays
 				file >> iPosition;
 				vertex.pos = positions[iPosition - 1];
-				//vertex.position[0] = positions[iPosition - 1][0];
-				//vertex.position[1] = positions[iPosition - 1][1];
-				//vertex.position[2] = positions[iPosition - 1][2];
+
 
 				if ('/' == file.peek())//is next in buffer ==  '/' ?
 				{
@@ -97,10 +95,7 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 
 						// Optional vertex normal
 						file >> iNormal;
-						//vertex.normal = normals[iNormal - 1];
-						//vertex.normal[0] = normals[iNormal - 1][0];
-						//vertex.normal[1] = normals[iNormal - 1][1];
-						//vertex.normal[2] = normals[iNormal - 1][2];
+						vertex.normal = normals[iNormal - 1];
 					}
 				}
 

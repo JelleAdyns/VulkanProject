@@ -11,7 +11,7 @@ public:
 	void GP2CommandBuffer::submit(VkSubmitInfo& info)const;
 	void BeginRecordBuffer();
 	void EndRecordBuffer();
-	void reset() const;
+	void Reset() const;
 
 	void FreeBuffer(const VkDevice& device, const GP2CommandPool& commandPool);
 
