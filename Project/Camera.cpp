@@ -22,18 +22,18 @@ void Camera::Initialize(int _width, int _height, float _fovAngle, glm::vec3 _ori
 
 void Camera::CalculateViewMatrix()
 {
-	glm::mat4 finalRotation = glm::rotate(glm::mat4x4(1.f), glm::radians(m_TotalYaw), glm::vec3{ 0,1,0 });
+	glm::mat4 finalRotation = glm::rotate(glm::mat4x4(1.f), glm::radians(m_TotalYaw), m_UnitY);
 	finalRotation = glm::rotate(finalRotation, glm::radians(m_TotalPitch), glm::vec3{ 1,0,0 });
 
 	m_Forward = glm::normalize(finalRotation[2]);
 
-	m_Right = glm::normalize(glm::cross(m_UnitY, m_Forward));
-	m_ViewMatrix = glm::lookAtLH(m_Origin, m_Origin + m_Forward, m_UnitY);
+	m_Right = glm::normalize(glm::cross(m_Forward, m_UnitY));
+	m_ViewMatrix = glm::lookAt(m_Origin, m_Origin + m_Forward, m_UnitY);
 }
 
 void Camera::CalculateProjectionMatrix()
 {
-	m_ProjectionMatrix = glm::perspectiveFovLH(m_Fov, static_cast<float>(m_Width), static_cast<float>(m_Height), m_Near, m_Far);
+	m_ProjectionMatrix = glm::perspectiveFov(m_Fov, static_cast<float>(m_Width), static_cast<float>(m_Height), m_Near, m_Far);
 }
 
 void Camera::KeyEvent(int key, int scancode, int action, int mods)

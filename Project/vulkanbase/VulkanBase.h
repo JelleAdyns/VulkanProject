@@ -106,14 +106,13 @@ private:
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
-		//m_Scene.AddRectangle(-0.95f, 0.25f, 0.15f, 0.75f, m_MeshContext);
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/vehicle.obj", meshContext));
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/tuktuk.obj", meshContext));
-		//m_Pipeline3D.AddRectangle(100.f, 100.f,400.f, 700.f, meshContext);
-		m_Pipeline2D.AddMesh(CreateRectangle(100.f, 100.f, 400.f, 700.f, meshContext));
-		m_Pipeline2D.AddMesh(CreateRoundedRectangle(0,0, HEIGHT, WIDTH, 100.f, 150.f, 20, meshContext));
-		//m_Scene.AddRoundedRectangle(-0.95f, -0.95f, 0.15f, 0.25f,0.3f,0.3f,10, m_MeshContext);
-		//m_Scene.AddOval(0, 0.5, .5f, 0.5f, 4, m_MeshContext);
+
+		m_Pipeline2D.AddMesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
+		m_Pipeline2D.AddMesh(CreateRoundedRectangle(50,600, 250, WIDTH, 50.f, 50.f, 3, meshContext));
+		m_Pipeline2D.AddMesh(CreateOval(WIDTH -100.f, HEIGHT - 100.f, 100, 50, 20, meshContext));
+
 
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 		CreateDepthResources();

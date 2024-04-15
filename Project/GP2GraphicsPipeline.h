@@ -42,8 +42,6 @@ public:
 	void UpdateUniformBuffer(glm::mat4 view, glm::mat4 projection);
 	void Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const;
 
-	//template< typename VertexType>
-
 private:
 
 
@@ -121,8 +119,8 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};

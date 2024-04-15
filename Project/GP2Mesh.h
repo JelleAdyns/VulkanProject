@@ -148,8 +148,6 @@ inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 	m_VertexConstant = meshData;
 }
 
-
-
 static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext)
 {
 
@@ -157,7 +155,7 @@ static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContex
 	std::vector<Vertex3D> vertices{};
 	std::vector<uint32_t> indices{};
 
-	ParseOBJ(objFile, vertices, indices);
+	ParseOBJ(objFile, vertices, indices, false);
 
 	for (auto& vertex : vertices)
 	{

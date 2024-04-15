@@ -59,23 +59,25 @@ void VulkanBase::DrawFrame() {
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
 	auto model = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto model2 = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 0.0f));
+	//model2 = glm::rotate(model2, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 	m_Pipeline3D.UpdateMeshMatrix(model, 0);
 	m_Pipeline3D.UpdateMeshMatrix(model2, 1);
 	m_Pipeline3D.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_Pipeline3D.Record(m_CommandBuffer, swapChainExtent);
 
-	 model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, .0f, 1.0f));
+
 	ViewProjection vp{};
-	glm::vec3 scaleFactors(1.f / WIDTH, 1.f / HEIGHT, 1.0f);
-	vp.view = glm::scale(glm::mat4(1.0f), scaleFactors);
-	vp.view = glm::translate(vp.view, glm::vec3(-1.0f, -1.0f, 0.0f));
-	//vp.view = glm::translate(vp.view, glm::vec3(-1, -1, 0));
-	m_Pipeline2D.UpdateMeshMatrix(model, 0);
-	m_Pipeline2D.UpdateMeshMatrix(model, 1);
+	glm::vec3 scaleFactors(1.f/WIDTH , 1.f/HEIGHT, 1.0f);
+	vp.view = glm::scale(vp.view, scaleFactors);
+	vp.view = glm::translate(vp.view, glm::vec3(-float(WIDTH), -float(HEIGHT), 0.0f));
+	vp.view = glm::scale(vp.view, glm::vec3(2.f, 2.f, 1.0f));
+	
 	m_Pipeline2D.UpdateUniformBuffer(vp.view, vp.proj);
 	m_Pipeline2D.Record(m_CommandBuffer, swapChainExtent);
 
