@@ -69,7 +69,7 @@ void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanCont
 	CreateGraphicsPipeline(vulkanContext.device);
 }
 template<typename VertexType>
-inline void GP2GraphicsPipeline<VertexType>::AddMesh(const GP2Mesh<VertexType>& mesh)
+void GP2GraphicsPipeline<VertexType>::AddMesh(const GP2Mesh<VertexType>& mesh)
 {
 	m_VecMeshes.push_back(mesh);
 }

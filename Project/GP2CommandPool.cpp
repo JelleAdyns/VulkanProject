@@ -1,5 +1,7 @@
 #include "GP2CommandPool.h"
-#include <vulkanbase/VulkanBase.h>
+#include "GP2CommandBuffer.h"
+#include "vulkanbase/VulkanBase.h"
+
 void GP2CommandPool::Initialize(const VkDevice& device, const QueueFamilyIndices& familyIndices)
 {
 	VkCommandPoolCreateInfo poolInfo{};
@@ -29,6 +31,7 @@ GP2CommandBuffer GP2CommandPool::CreateCommandBuffer(const VkDevice& device) con
 	gpBuffer.SetVKCommandBuffer(buffer);
 	return gpBuffer;
 }
+
 void GP2CommandPool::DestroyCommandPool(const VkDevice& device)
 {
 	vkDestroyCommandPool(device, m_CommandPool, nullptr);

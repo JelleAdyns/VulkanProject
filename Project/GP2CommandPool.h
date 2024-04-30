@@ -1,14 +1,14 @@
 #pragma once
 
-#include "GP2CommandBuffer.h"
-
+#include "vulkanbase/VulkanUtil.h"
 
 struct QueueFamilyIndices;
+class GP2CommandBuffer;
 class GP2CommandPool
 {
 public:
 	GP2CommandPool() :
-		m_CommandPool{ VK_NULL_HANDLE }
+		m_CommandPool{ }
 	{}
 
 	~GP2CommandPool() = default;
@@ -21,8 +21,8 @@ public:
 	void Initialize(const VkDevice& device, const QueueFamilyIndices& familyIndices);
 
 	const VkCommandPool& GetCommandPool() const{ return m_CommandPool; }
-	void DestroyCommandPool(const VkDevice& device);
 	GP2CommandBuffer CreateCommandBuffer(const VkDevice& device) const;
+	void DestroyCommandPool(const VkDevice& device);
 private:
 
 	VkCommandPool m_CommandPool;

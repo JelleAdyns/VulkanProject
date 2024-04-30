@@ -18,7 +18,6 @@ public:
 	GP2Mesh() = default;
 	~GP2Mesh() = default;
 
-
 	void DestroyMesh(const VkDevice& device);
 	void Draw(VkPipelineLayout pipelineLayout, const VkCommandBuffer& cmdBuffer) const;
 	void UploadBuffers(const MeshContext& meshContext);
@@ -107,27 +106,13 @@ void GP2Mesh<VertexType>::CopyBuffer(const MeshContext& meshContext, VkDeviceSiz
 {
 	GP2CommandBuffer cmdBuffer = meshContext.commandPool.CreateCommandBuffer(meshContext.device);
 
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(cmdBuffer.GetVkCommandBuffer(), &beginInfo);
+	cmdBuffer.BeginSingleTimeCommands();
 
 	VkBufferCopy copyRegion{};
 	copyRegion.size = size;
 	vkCmdCopyBuffer(cmdBuffer.GetVkCommandBuffer(), src, dst, 1, &copyRegion);
 
-	vkEndCommandBuffer(cmdBuffer.GetVkCommandBuffer());
-
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	cmdBuffer.submit(submitInfo);
-
-	vkQueueSubmit(meshContext.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(meshContext.graphicsQueue);
-
-	cmdBuffer.FreeBuffer(meshContext.device, meshContext.commandPool);
-
+	cmdBuffer.EndSingleTimeCommands(meshContext);
 }
 
 template <typename VertexType>

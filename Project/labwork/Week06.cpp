@@ -64,7 +64,7 @@ void VulkanBase::DrawFrame() {
 	model = glm::rotate(model, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto model2 = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 0.0f));
-	//model2 = glm::rotate(model2, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model2 = glm::rotate(model2, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_Pipeline3D.UpdateMeshMatrix(model, 0);
 	m_Pipeline3D.UpdateMeshMatrix(model2, 1);
@@ -96,7 +96,7 @@ void VulkanBase::DrawFrame() {
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 
-	m_CommandBuffer.submit(submitInfo);
+	m_CommandBuffer.Submit(submitInfo);
 
 	VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
 	submitInfo.signalSemaphoreCount = 1;

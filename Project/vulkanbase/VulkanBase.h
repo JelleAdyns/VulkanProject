@@ -20,6 +20,7 @@
 #include "GP2CommandBuffer.h"
 #include "GP2GraphicsPipeline.h"
 #include "GP2DescriptorPool.h"
+#include "GP2Texture.h"
 #include "Vertex.h"
 #include "Camera.h"
 #include "ContextStructs.h"
@@ -65,6 +66,10 @@ public:
 	}
 
 	Camera* GetCamera() { return m_Camera.get(); }
+	static uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties);
+	static void CreateImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	static void TransitionImageLayout(const MeshContext& meshContext, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	static bool HasStencilComponent(VkFormat format);
 private:
 	void initVulkan() 
 	{
@@ -106,8 +111,10 @@ private:
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 
+		m_Texture.CreateTextureImage(meshContext);
+
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/vehicle.obj", meshContext));
-		m_Pipeline3D.AddMesh(CreateMesh("Resources/tuktuk.obj", meshContext));
+		m_Pipeline3D.AddMesh(CreateMesh("Resources/birb.obj", meshContext));
 
 		m_Pipeline2D.AddMesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
 		m_Pipeline2D.AddMesh(CreateRoundedRectangle(50,600, 250, WIDTH, 50.f, 50.f, 3, meshContext));
@@ -117,6 +124,7 @@ private:
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 		CreateDepthResources();
 		CreateFrameBuffers();
+
 		// week 06
 		CreateSyncObjects();
 	}
@@ -147,6 +155,7 @@ private:
 		}
 		m_CommandPool.DestroyCommandPool(device);
 
+		m_Texture.DestroyTexture(device);
 		//m_Shader.DestroyUniformObjects(device);
 		m_Pipeline3D.DestroyMeshes(device);
 		m_Pipeline2D.DestroyMeshes(device);
@@ -229,19 +238,17 @@ private:
 	void CreateDepthResources();
 	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat FindDepthFormat();
-	bool HasStencilComponent(VkFormat format);
-	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
+	
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-	uint32_t FindMemoryType(uint32_t typeFilter, const VkMemoryPropertyFlags& properties) const;
-	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-	VkCommandBuffer BeginSingleTimeCommands();
-	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+	GP2Texture m_Texture{};
 
 
 	// Week 05 
 	// Logical and physical device
 
-	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkPhysicalDevice physicalDevice;
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 	
@@ -254,7 +261,7 @@ private:
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
-	VkDevice device = VK_NULL_HANDLE;
+	VkDevice device;
 	VkSurfaceKHR surface;
 
 	VkSemaphore imageAvailableSemaphore;
@@ -275,3 +282,5 @@ private:
 		return VK_FALSE;
 	}
 };
+//VkDevice VulkanBase::device{ VK_NULL_HANDLE };
+//VkPhysicalDevice VulkanBase::physicalDevice{ VK_NULL_HANDLE };

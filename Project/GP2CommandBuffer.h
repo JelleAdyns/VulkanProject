@@ -1,16 +1,22 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
+#include "ContextStructs.h"
 
-class GP2CommandPool;
 class GP2CommandBuffer final
 {
 public:
 
 	GP2CommandBuffer() = default;
 
-	void GP2CommandBuffer::submit(VkSubmitInfo& info)const;
+	void Submit(VkSubmitInfo& info)const;
 	void BeginRecordBuffer();
 	void EndRecordBuffer();
+
+	void BeginSingleTimeCommands();
+
+	void EndSingleTimeCommands(const MeshContext& meshContext);
+	void EndSingleTimeCommands(const VkQueue& graphicsQueue, const VkDevice& device, const GP2CommandPool& commandPool);
+
 	void Reset() const;
 
 	void FreeBuffer(const VkDevice& device, const GP2CommandPool& commandPool);

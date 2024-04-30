@@ -24,8 +24,8 @@ public:
 	
 	VkBuffer GetVkBuffer() { return m_UBOBuffer.GetVkBuffer(); }
  private:
-	 GP2Buffer m_UBOBuffer;
-	 UBO m_UBOSrc;
+	 GP2Buffer m_UBOBuffer{};
+	 UBO m_UBOSrc{};
  };
 
 template < typename UBO >
