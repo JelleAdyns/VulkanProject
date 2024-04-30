@@ -122,8 +122,10 @@ void VulkanBase::CreateSwapChain() {
 void VulkanBase::CreateImageViews() {
 	swapChainImageViews.resize(swapChainImages.size());
 
-	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		VkImageViewCreateInfo createInfo{};
+	for (size_t i = 0; i < swapChainImages.size(); i++) 
+	{
+		swapChainImageViews[i] = CreateImageView(device, swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		/*VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChainImages[i];
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -140,7 +142,7 @@ void VulkanBase::CreateImageViews() {
 
 		if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create image views!");
-		}
+		}*/
 	}
 }
 void VulkanBase::RecreateSwapChain()
@@ -190,7 +192,7 @@ void VulkanBase::CreateDepthResources()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		depthImage, depthImageMemory);
 
-	depthImageView = CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+	depthImageView = CreateImageView(device, depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 	TransitionImageLayout(MeshContext{device, physicalDevice, m_CommandPool, graphicsQueue}, 
 		depthImage, depthFormat, 
@@ -263,7 +265,7 @@ void VulkanBase::CreateImage(VkDevice device, VkPhysicalDevice physicalDevice, u
 
 	vkBindImageMemory(device, image, imageMemory, 0);
 }
-VkImageView VulkanBase::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView VulkanBase::CreateImageView(const VkDevice& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

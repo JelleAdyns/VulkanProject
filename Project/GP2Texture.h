@@ -17,10 +17,16 @@ public:
 
 	void CreateTextureImage(const MeshContext& meshContext);
 	void DestroyTexture(const VkDevice& device);
+
+	const VkImageView& GetImageView() const;
+	const VkSampler& GetSampler() const;
 private:
 
+	void CreateTextureSampler(const MeshContext& meshContext);
 	void CopyBufferToImage(const MeshContext& meshContext, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 	VkImage m_Image{};
+	VkImageView m_ImageView{};
 	VkDeviceMemory m_DeviceMemory{};
+	VkSampler m_Sampler{};
 };

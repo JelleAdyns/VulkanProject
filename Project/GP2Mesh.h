@@ -164,10 +164,10 @@ static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, fl
 	constexpr int nrOfVertices{ 4 };
 	constexpr int nrOfIndices{ 6 };
 
-	Vertex2D vertices[nrOfVertices]{ {{left, top}, glm::vec3{1.0f,0.0f,0.0f}},
-						{{right, top}, glm::vec3{0.0f,1.0f,0.0f}},
-						{{right, bottom}, glm::vec3{1.0f,0.0f,0.0f}},
-						{{left, bottom}, glm::vec3{0.0f,0.0f,1.0f}} };
+	Vertex2D vertices[nrOfVertices]{ {{left, top}, glm::vec3{1.0f,0.0f,0.0f}, {0.f,0.f}},
+						{{right, top}, glm::vec3{0.0f,1.0f,0.0f}, {1.f,0.f}},
+						{{right, bottom}, glm::vec3{1.0f,0.0f,0.0f}, {1.f,1.f}},
+						{{left, bottom}, glm::vec3{0.0f,0.0f,1.0f}, {0.f,1.f}} };
 
 	int indices[nrOfIndices]{ 0,1,2,0,2,3 };
 
@@ -422,14 +422,19 @@ static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX,
 
 	GP2Mesh<Vertex2D> oval;
 
-	Vertex2D center  {glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f}};
+	Vertex2D center{ glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f},glm::vec2{0.5f,0.5f} };
 	Vertex2D currEdgeVertex { {}, glm::vec3{0.0f,1.0f,0.0f} };
 
 	oval.AddVertex(center);
 	for (int i = 1; i <= numberOfSegments; i++)
 	{
-		currEdgeVertex.pos.x = centerX + radiusX * glm::cos(radians * i);
-		currEdgeVertex.pos.y = centerY + radiusY * glm::sin(radians * i);
+		auto cosValue = glm::cos(radians * i);
+		auto sinValue = glm::sin(radians * i);
+
+		currEdgeVertex.texCoord.x = (cosValue+1)/2;
+		currEdgeVertex.texCoord.y = (sinValue+1)/2;
+		currEdgeVertex.pos.x = centerX + radiusX * cosValue;
+		currEdgeVertex.pos.y = centerY + radiusY * sinValue;
 
 		oval.AddVertex(currEdgeVertex);
 

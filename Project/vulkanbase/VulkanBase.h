@@ -68,6 +68,7 @@ public:
 	Camera* GetCamera() { return m_Camera.get(); }
 	static uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, const VkMemoryPropertyFlags& properties);
 	static void CreateImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	static VkImageView CreateImageView(const VkDevice& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	static void TransitionImageLayout(const MeshContext& meshContext, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	static bool HasStencilComponent(VkFormat format);
 private:
@@ -103,22 +104,20 @@ private:
 			m_RenderPass,
 			swapChainExtent
 		};
+		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 		
-		m_Pipeline3D.Initialize(vulkanContext, swapChainImageFormat, FindDepthFormat());
-		m_Pipeline2D.Initialize(vulkanContext, swapChainImageFormat, FindDepthFormat());
+		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
+		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 		
 		// week 02
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
-		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
-
-		m_Texture.CreateTextureImage(meshContext);
 
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/vehicle.obj", meshContext));
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/birb.obj", meshContext));
 
 		m_Pipeline2D.AddMesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
 		m_Pipeline2D.AddMesh(CreateRoundedRectangle(50,600, 250, WIDTH, 50.f, 50.f, 3, meshContext));
-		m_Pipeline2D.AddMesh(CreateOval(WIDTH -100.f, HEIGHT - 100.f, 100, 50, 20, meshContext));
+		m_Pipeline2D.AddMesh(CreateOval(WIDTH -200.f, HEIGHT - 200.f, 200, 200, 40, meshContext));
 
 
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
@@ -155,7 +154,6 @@ private:
 		}
 		m_CommandPool.DestroyCommandPool(device);
 
-		m_Texture.DestroyTexture(device);
 		//m_Shader.DestroyUniformObjects(device);
 		m_Pipeline3D.DestroyMeshes(device);
 		m_Pipeline2D.DestroyMeshes(device);
@@ -238,11 +236,6 @@ private:
 	void CreateDepthResources();
 	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat FindDepthFormat();
-
-	
-	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-
-	GP2Texture m_Texture{};
 
 
 	// Week 05 

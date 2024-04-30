@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include "GP2Buffer.h"
 #include "GP2DescriptorPool.h"
+#include "GP2Texture.h"
 #include "ContextStructs.h"
 
 template <typename VertexType>
@@ -28,7 +29,7 @@ public:
 	GP2Shader& operator=(const GP2Shader& other) = delete;
 	GP2Shader& operator=(GP2Shader&& other) noexcept = delete;
 	
-	void Init(const VulkanContext& vulkanContext);
+	void Init(const VulkanContext& vulkanContext, const GP2Texture& texture);
 	void DestroyShaderModules(const VkDevice& device);
 	void DestroyUniformObjects(const VkDevice& device);
 
@@ -59,7 +60,7 @@ private:
 };
 
 template <typename VertexType>
-void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext)
+void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext, const GP2Texture& texture)
 {
 	m_VecShadersStageInfos.push_back(CreateFragmentShaderInfo(vulkanContext.device));
 	m_VecShadersStageInfos.push_back(CreateVertexShaderInfo(vulkanContext.device));
@@ -67,7 +68,7 @@ void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext)
 	//m_UniformBuffer.Map(vulkanContext.device);
 
 	m_pDescriptorPool = std::make_unique<GP2DescriptorPool<ViewProjection>>(vulkanContext.device, 1);
-	m_pDescriptorPool->Initialize(vulkanContext);
+	m_pDescriptorPool->Initialize(vulkanContext, texture);
 }
 template <typename VertexType>
 void GP2Shader<VertexType>::DestroyShaderModules(const VkDevice& device)

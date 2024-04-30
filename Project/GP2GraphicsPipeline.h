@@ -4,6 +4,7 @@
 #include "OBJParser.h"
 #include "GP2Shader.h"
 #include "GP2Mesh.h"
+#include "GP2Texture.h"
 #include <array>
 
 
@@ -25,6 +26,7 @@ public:
 
 	void Destroy(const VkDevice& device)
 	{
+		m_Texture.DestroyTexture(device);
 		m_Shader.DestroyUniformObjects(device);
 		vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
@@ -34,7 +36,7 @@ public:
 	VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 
 	void DestroyMeshes(const VkDevice& device);
-	void Initialize(const VulkanContext& vulkanContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
+	void Initialize(const VulkanContext& vulkanContext, const MeshContext& meshContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
 
 	void AddMesh(const GP2Mesh<VertexType>& mesh);
 
@@ -51,10 +53,10 @@ private:
 	VkPipeline m_GraphicsPipeline{};
 	VkRenderPass m_RenderPass{};
 
+	GP2Texture m_Texture{};
 	std::vector<GP2Mesh<VertexType>> m_VecMeshes;
 	GP2Shader<VertexType> m_Shader;
 
-	void MakeRect(GP2Mesh<VertexType>& mesh, float top, float left, float bottom, float right) const;
 	void CreateGraphicsPipeline(const VkDevice& device);
 	VkPushConstantRange CreatePushConstantRange();
 };
@@ -62,11 +64,13 @@ private:
 
 
 template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat)
+void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanContext, const MeshContext& meshContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat)
 {
 	m_RenderPass = vulkanContext.renderPass;
-	m_Shader.Init(vulkanContext);
+	m_Texture.CreateTextureImage(meshContext);
+	m_Shader.Init(vulkanContext, m_Texture);
 	CreateGraphicsPipeline(vulkanContext.device);
+
 }
 template<typename VertexType>
 void GP2GraphicsPipeline<VertexType>::AddMesh(const GP2Mesh<VertexType>& mesh)
@@ -239,23 +243,4 @@ void GP2GraphicsPipeline<VertexType>::DestroyMeshes(const VkDevice& device)
 	{
 		mesh.DestroyMesh(device);
 	}
-}
-
-template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::MakeRect(GP2Mesh<VertexType>& mesh, float top, float left, float bottom, float right) const
-{
-	assert((left < right) && "Left is greater than right");
-	assert((top < bottom) && "Top is greater than bottom");
-	constexpr int nrOfVertices{ 4 };
-	constexpr int nrOfIndices{ 6 };
-
-	VertexType vertices[nrOfVertices]{ {{left, top}, glm::vec3{1.0f,0.0f,0.0f}},
-						{{right, top}, glm::vec3{0.0f,1.0f,0.0f}},
-						{{right, bottom}, glm::vec3{1.0f,0.0f,0.0f}},
-						{{left, bottom}, glm::vec3{0.0f,0.0f,1.0f}} };
-
-	int indices[nrOfIndices]{ 0,1,2,0,2,3 };
-
-	for (int i = 0; i < nrOfVertices; i++) mesh.AddVertex(vertices[i]);
-	for (int i = 0; i < nrOfIndices; i++) mesh.AddIndex(indices[i]);
 }

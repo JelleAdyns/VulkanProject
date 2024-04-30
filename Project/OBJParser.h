@@ -83,9 +83,9 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 						// Optional texture coordinate
 						file >> iTexCoord;
 
-						//vertex.UV = UVs[iTexCoord - 1];
-						//vertex.UV[0] = UVs[iTexCoord - 1][0];
-						//vertex.UV[1] = UVs[iTexCoord - 1][1];
+						vertex.texCoord = UVs[iTexCoord - 1];
+						vertex.texCoord[0] = UVs[iTexCoord - 1][0];
+						vertex.texCoord[1] = UVs[iTexCoord - 1][1];
 
 					}
 

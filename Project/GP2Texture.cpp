@@ -7,7 +7,7 @@
 void GP2Texture::CreateTextureImage(const MeshContext& meshContext)
 {
     int texWidth{}, texHeight{}, texChannels{};
-    stbi_uc* pixels = stbi_load("Resources/texture2.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load("Resources/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) throw std::runtime_error("failed to load texture image!");
@@ -21,7 +21,7 @@ void GP2Texture::CreateTextureImage(const MeshContext& meshContext)
     memcpy(data, pixels, static_cast<size_t>(imageSize));
     vkUnmapMemory(meshContext.device, stagingBuffer.GetVkBufferMemory());
 
-    stbi_image_free(pixels); //TODO: look for a better use of your member vars
+    stbi_image_free(pixels);
 
     VulkanBase::CreateImage(meshContext.device, meshContext.physicalDevice,
         texWidth, texHeight,
@@ -44,12 +44,62 @@ void GP2Texture::CreateTextureImage(const MeshContext& meshContext)
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     stagingBuffer.DestroyBuffer(meshContext.device);
+
+    // TextureImageView
+    m_ImageView = VulkanBase::CreateImageView(meshContext.device, m_Image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+
+    // Sampler
+    CreateTextureSampler(meshContext);
 }
 
 void GP2Texture::DestroyTexture(const VkDevice& device)
 {
+    vkDestroySampler(device, m_Sampler, nullptr);
+    vkDestroyImageView(device, m_ImageView, nullptr);
     vkDestroyImage(device, m_Image, nullptr);
     vkFreeMemory(device, m_DeviceMemory, nullptr);
+}
+
+const VkImageView& GP2Texture::GetImageView() const
+{
+    return m_ImageView;
+}
+
+const VkSampler& GP2Texture::GetSampler() const
+{
+    return m_Sampler;
+}
+
+void GP2Texture::CreateTextureSampler(const MeshContext& meshContext)
+{
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(meshContext.physicalDevice, &properties);
+
+    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+
+    if (vkCreateSampler(meshContext.device, &samplerInfo, nullptr, &m_Sampler) != VK_SUCCESS) 
+    {
+        throw std::runtime_error("failed to create texture sampler!");
+    }
 }
 
 void GP2Texture::CopyBufferToImage(const MeshContext& meshContext, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)

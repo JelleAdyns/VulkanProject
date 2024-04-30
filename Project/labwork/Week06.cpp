@@ -61,10 +61,10 @@ void VulkanBase::DrawFrame() {
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 	auto model = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto model2 = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 0.0f));
-	model2 = glm::rotate(model2, time * glm::radians(360.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model2 = glm::rotate(model2, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_Pipeline3D.UpdateMeshMatrix(model, 0);
 	m_Pipeline3D.UpdateMeshMatrix(model2, 1);
