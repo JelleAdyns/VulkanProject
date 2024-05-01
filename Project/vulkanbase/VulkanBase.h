@@ -116,7 +116,7 @@ private:
 		m_Pipeline3D.AddMesh(CreateMesh("Resources/birb.obj", meshContext));
 
 		m_Pipeline2D.AddMesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
-		m_Pipeline2D.AddMesh(CreateRoundedRectangle(50,600, 250, WIDTH, 50.f, 50.f, 3, meshContext));
+		m_Pipeline2D.AddMesh(CreateRoundedRectangle(50,600, 250, WIDTH, 50.f, 50.f, 10, meshContext));
 		m_Pipeline2D.AddMesh(CreateOval(WIDTH -200.f, HEIGHT - 200.f, 200, 200, 40, meshContext));
 
 

@@ -15,5 +15,5 @@ void main()
     vec3 diffuse = diff*fragColor;
     
     //outColor = vec4(diffuse, 1.0);
-    outColor = texture(texSampler, fragTexCoord);
+    outColor = vec4(diffuse, 1.0) * texture(texSampler, fragTexCoord);
 }

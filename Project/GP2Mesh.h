@@ -196,15 +196,18 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 	//	\	|	|	/
 	//	 ---10-11---
 
+	float width = right - left;
+	float height = bottom - top;
+
 	int currMaxIndex{ -1 };
 	GP2Mesh<Vertex2D> rect{};
 
 	//MiddleRect
 	Vertex2D verticesMiddleRect[4]{};
-	verticesMiddleRect[0] = { glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f} };
-	verticesMiddleRect[1] = { glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f} };
-	verticesMiddleRect[2] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f} };
-	verticesMiddleRect[3] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f} };
+	verticesMiddleRect[0] = { glm::vec2{left + radiusX, top + radiusY},glm::vec3{0.0f,0.0f,1.0f}, glm::vec2{radiusX / width, radiusY / height} };
+	verticesMiddleRect[1] = { glm::vec2{right - radiusX, top + radiusY},glm::vec3{1.0f,0.0f,0.0f}, glm::vec2{(width - radiusX)/width, radiusY / height} };
+	verticesMiddleRect[2] = { glm::vec2{ right - radiusX, bottom - radiusY }, glm::vec3{1.0f,0.0f,0.0f}, glm::vec2{(width - radiusX) / width, (height - radiusY) / height} };
+	verticesMiddleRect[3] = { glm::vec2{ left + radiusX, bottom - radiusY },glm::vec3{0.0f,0.0f,1.0f}, glm::vec2{radiusX / width,(height - radiusY) / height} };
 
 	rect.AddVertex(verticesMiddleRect[0]);
 	rect.AddVertex(verticesMiddleRect[1]);
@@ -222,8 +225,8 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	//TopRect
 	Vertex2D verticesTopRect[2]{};
-	verticesTopRect[0] = { glm::vec2{left + radiusX, top},glm::vec3{0.0f,0.0f,1.0f} };
-	verticesTopRect[1] = { glm::vec2{right - radiusX, top},glm::vec3{1.0f,0.0f,0.0f} };
+	verticesTopRect[0] = { glm::vec2{left + radiusX, top},glm::vec3{0.0f,0.0f,1.0f}, glm::vec2{radiusX / width, 0.f} };
+	verticesTopRect[1] = { glm::vec2{right - radiusX, top},glm::vec3{1.0f,0.0f,0.0f}, glm::vec2{(width - radiusX) / width, 0.f} };
 
 	rect.AddVertex(verticesTopRect[0]);
 	rect.AddVertex(verticesTopRect[1]);
@@ -239,8 +242,8 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	//LeftRect
 	Vertex2D verticesLeftRect[2]{};
-	verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
-	verticesLeftRect[1] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f} };
+	verticesLeftRect[0] = { glm::vec2{ left, top + radiusY },glm::vec3{0.0f,1.0f,0.0f}, glm::vec2{0.f,radiusY / height } };
+	verticesLeftRect[1] = { glm::vec2{ left, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f}, glm::vec2{0.f, (height - radiusY) / height } };
 
 	rect.AddVertex(verticesLeftRect[0]);
 	rect.AddVertex(verticesLeftRect[1]);
@@ -256,8 +259,8 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	//RightRect
 	Vertex2D verticesRightRect[2]{};
-	verticesRightRect[0] = { glm::vec2{ right, top + radiusY },glm::vec3{0.0f,1.0f,0.0f} };
-	verticesRightRect[1] = { glm::vec2{ right, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f } };
+	verticesRightRect[0] = { glm::vec2{ right, top + radiusY },glm::vec3{0.0f,1.0f,0.0f}, glm::vec2{1.f, radiusY / height } };
+	verticesRightRect[1] = { glm::vec2{ right, bottom - radiusY },glm::vec3{0.0f,1.0f,0.0f }, glm::vec2{1.f,(height - radiusY) / height } };
 
 	rect.AddVertex(verticesRightRect[0]);
 	rect.AddVertex(verticesRightRect[1]);
@@ -273,8 +276,8 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	//BottomRect
 	Vertex2D verticesBottomRect[2]{};
-	verticesBottomRect[0] = { glm::vec2{ left + radiusX, bottom },glm::vec3{0.0f,0.0f,1.0f} };
-	verticesBottomRect[1] = { glm::vec2{ right - radiusX, bottom },glm::vec3{1.0f,0.0f,0.0f } };
+	verticesBottomRect[0] = { glm::vec2{ left + radiusX, bottom },glm::vec3{0.0f,0.0f,1.0f}, glm::vec2{radiusX/width, 1.f} };
+	verticesBottomRect[1] = { glm::vec2{ right - radiusX, bottom },glm::vec3{1.0f,0.0f,0.0f }, glm::vec2{(width - radiusX) / width, 1.f} };
 
 	rect.AddVertex(verticesBottomRect[0]);
 	rect.AddVertex(verticesBottomRect[1]);
@@ -294,8 +297,10 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 	Vertex2D currEdgeVertex;
 	constexpr float pi = 3.14159265359f;
 	float radians = pi / 2 / numberOfSegmentsPerCorner;
+	float mappedRadiusX = (radiusX / width);
+	float mappedRadiusY = (radiusX / height);
 
-	//TopLeftCorner
+	//TopLeftCornerY
 
 	rect.AddIndex(0);
 	rect.AddIndex(6);
@@ -304,8 +309,14 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
 	{
-		currEdgeVertex.pos.x = verticesMiddleRect[0].pos.x + radiusX * glm::cos(radians * i + pi);
-		currEdgeVertex.pos.y = verticesMiddleRect[0].pos.y + radiusY * glm::sin(radians * i + pi);
+		auto cosValue = glm::cos(radians * i + pi);
+		auto sinValue = glm::sin(radians * i + pi);
+
+		currEdgeVertex.texCoord.x = verticesMiddleRect[0].texCoord.x + cosValue * mappedRadiusX;
+		currEdgeVertex.texCoord.y = verticesMiddleRect[0].texCoord.y + sinValue * mappedRadiusY;
+
+		currEdgeVertex.pos.x = verticesMiddleRect[0].pos.x + radiusX * cosValue;
+		currEdgeVertex.pos.y = verticesMiddleRect[0].pos.y + radiusY * sinValue;
 
 		rect.AddVertex(currEdgeVertex);
 		++currMaxIndex;
@@ -332,8 +343,15 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
 	{
-		currEdgeVertex.pos.x = verticesMiddleRect[1].pos.x + radiusX * glm::cos(radians * i - pi / 2);
-		currEdgeVertex.pos.y = verticesMiddleRect[1].pos.y + radiusY * glm::sin(radians * i - pi / 2);
+
+		auto cosValue = glm::cos(radians * i - pi / 2);
+		auto sinValue = glm::sin(radians * i - pi / 2);
+
+		currEdgeVertex.texCoord.x = verticesMiddleRect[1].texCoord.x + cosValue * mappedRadiusX;
+		currEdgeVertex.texCoord.y = verticesMiddleRect[1].texCoord.y + sinValue * mappedRadiusY;
+
+		currEdgeVertex.pos.x = verticesMiddleRect[1].pos.x + radiusX * cosValue;
+		currEdgeVertex.pos.y = verticesMiddleRect[1].pos.y + radiusY * sinValue;
 
 		rect.AddVertex(currEdgeVertex);
 		++currMaxIndex;
@@ -360,8 +378,14 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
 	{
-		currEdgeVertex.pos.x = verticesMiddleRect[3].pos.x + radiusX * glm::cos(radians * i + pi / 2);
-		currEdgeVertex.pos.y = verticesMiddleRect[3].pos.y + radiusY * glm::sin(radians * i + pi / 2);
+		auto cosValue = glm::cos(radians * i + pi / 2);
+		auto sinValue = glm::sin(radians * i + pi / 2);
+
+		currEdgeVertex.texCoord.x = verticesMiddleRect[3].texCoord.x + cosValue * mappedRadiusX;
+		currEdgeVertex.texCoord.y = verticesMiddleRect[3].texCoord.y + sinValue * mappedRadiusY;
+
+		currEdgeVertex.pos.x = verticesMiddleRect[3].pos.x + radiusX * cosValue;
+		currEdgeVertex.pos.y = verticesMiddleRect[3].pos.y + radiusY * sinValue;
 
 		rect.AddVertex(currEdgeVertex);
 		++currMaxIndex;
@@ -388,8 +412,14 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 
 	for (int i = 1; i < numberOfSegmentsPerCorner; i++)
 	{
-		currEdgeVertex.pos.x = verticesMiddleRect[2].pos.x + radiusX * glm::cos(radians * i);
-		currEdgeVertex.pos.y = verticesMiddleRect[2].pos.y + radiusY * glm::sin(radians * i);
+		auto cosValue = glm::cos(radians * i);
+		auto sinValue = glm::sin(radians * i);
+
+		currEdgeVertex.texCoord.x = verticesMiddleRect[2].texCoord.x + cosValue * mappedRadiusX;
+		currEdgeVertex.texCoord.y = verticesMiddleRect[2].texCoord.y + sinValue * mappedRadiusY;
+
+		currEdgeVertex.pos.x = verticesMiddleRect[2].pos.x + radiusX * cosValue;
+		currEdgeVertex.pos.y = verticesMiddleRect[2].pos.y + radiusY * sinValue;
 
 		rect.AddVertex(currEdgeVertex);
 		++currMaxIndex;
