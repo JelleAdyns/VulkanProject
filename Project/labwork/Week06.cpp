@@ -60,16 +60,24 @@ void VulkanBase::DrawFrame() {
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-	auto model = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	auto vehicle = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, 0.0f));
+	vehicle = glm::rotate(vehicle, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	auto model2 = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 0.0f));
-	model2 = glm::rotate(model2, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	auto boat = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
+	boat = glm::scale(boat, glm::vec3(0.25f, 0.25f, 0.25f));
+	
 
-	m_Pipeline3D.UpdateMeshMatrix(model, 0);
-	m_Pipeline3D.UpdateMeshMatrix(model2, 1);
+	auto birb = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 0.0f));
+	birb = glm::rotate(birb, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	m_Pipeline3D.UpdateMeshMatrix(vehicle, 0);
+	m_Pipeline3D.UpdateMeshMatrix(birb, 1);
 	m_Pipeline3D.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_Pipeline3D.Record(m_CommandBuffer, swapChainExtent);
+
+	m_Pipeline3DBoat.UpdateMeshMatrix(boat, 0);
+	m_Pipeline3DBoat.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
+	m_Pipeline3DBoat.Record(m_CommandBuffer, swapChainExtent);
 
 
 	ViewProjection vp{};

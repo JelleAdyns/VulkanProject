@@ -30,6 +30,7 @@ private:
 
 	void CopyBuffer(const MeshContext& meshContext, VkDeviceSize size, VkBuffer src, VkBuffer dst);
 
+	GP2Texture* m_Texture;
 	GP2Buffer m_VertexBuffer;
 	GP2Buffer m_IndexBuffer;
 	std::vector<VertexType> m_VecVertices;
@@ -133,14 +134,14 @@ inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 	m_VertexConstant = meshData;
 }
 
-static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext)
+static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = false)
 {
 
 	GP2Mesh<Vertex3D> mesh{};
 	std::vector<Vertex3D> vertices{};
 	std::vector<uint32_t> indices{};
 
-	ParseOBJ(objFile, vertices, indices, false);
+	ParseOBJ(objFile, vertices, indices, flipAxisWinding);
 
 	for (auto& vertex : vertices)
 	{

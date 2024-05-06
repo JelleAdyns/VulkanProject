@@ -145,7 +145,7 @@ void GP2DescriptorPool<UBO>::CreateDescriptorSets(const VkDevice& device, const 
 template <typename UBO>
 void GP2DescriptorPool<UBO>::BindDescriptorSet(VkCommandBuffer buffer, VkPipelineLayout layout, size_t index)
 {
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &m_DescriptorSets[index], 0, nullptr);
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, static_cast<uint32_t>(m_DescriptorSets.size()), &m_DescriptorSets[index], 0, nullptr);
 }
 
 template <typename UBO>

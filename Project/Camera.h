@@ -32,7 +32,7 @@ private:
 	void CalculateProjectionMatrix();
 
 	const float m_Near{ .1f };
-	const float m_Far{ 1000.f };
+	const float m_Far{ 10000.f };
 
 	glm::vec3 m_Origin{};
 	float m_FovAngle{ 90.f };
@@ -48,7 +48,7 @@ private:
 
 	glm::vec2 m_DragStart{};
 
-	const float m_TranslateSpeed{ 30.f };
+	const float m_TranslateSpeed{ 5.f };
 
 	glm::mat4 m_ViewMatrix{};
 	glm::mat4 m_ProjectionMatrix{};

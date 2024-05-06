@@ -13,9 +13,10 @@ class GP2GraphicsPipeline
 {
 public:
 
-	GP2GraphicsPipeline(const std::string& vertexShaderFile, const std::string& fragmentShaderFile) :
+	GP2GraphicsPipeline(const std::string& vertexShaderFile, const std::string& fragmentShaderFile, const std::string& diffuseTextureFile) :
 		m_VecMeshes{},
-		m_Shader{ vertexShaderFile,fragmentShaderFile }
+		m_Shader{ vertexShaderFile,fragmentShaderFile },
+		m_DiffuseTexture{diffuseTextureFile}
 	{}
 	~GP2GraphicsPipeline() = default;
 
@@ -26,7 +27,7 @@ public:
 
 	void Destroy(const VkDevice& device)
 	{
-		m_Texture.DestroyTexture(device);
+		m_DiffuseTexture.DestroyTexture(device);
 		m_Shader.DestroyUniformObjects(device);
 		vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
@@ -53,7 +54,7 @@ private:
 	VkPipeline m_GraphicsPipeline{};
 	VkRenderPass m_RenderPass{};
 
-	GP2Texture m_Texture{};
+	GP2Texture m_DiffuseTexture;
 	std::vector<GP2Mesh<VertexType>> m_VecMeshes;
 	GP2Shader<VertexType> m_Shader;
 
@@ -67,8 +68,8 @@ template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanContext, const MeshContext& meshContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat)
 {
 	m_RenderPass = vulkanContext.renderPass;
-	m_Texture.CreateTextureImage(meshContext);
-	m_Shader.Init(vulkanContext, m_Texture);
+	m_DiffuseTexture.CreateTextureImage(meshContext);
+	m_Shader.Init(vulkanContext, m_DiffuseTexture);
 	CreateGraphicsPipeline(vulkanContext.device);
 
 }

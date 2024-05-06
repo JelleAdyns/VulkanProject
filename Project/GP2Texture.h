@@ -7,7 +7,9 @@ class GP2Texture
 {
 public:
 
-	GP2Texture() = default;
+	GP2Texture(const std::string& diffuseTextureFile) :
+		m_DiffuseTextureFile{ diffuseTextureFile }
+	{}
 	~GP2Texture() = default;
 
 	GP2Texture(const GP2Texture& other) = delete;
@@ -24,6 +26,8 @@ private:
 
 	void CreateTextureSampler(const MeshContext& meshContext);
 	void CopyBufferToImage(const MeshContext& meshContext, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+	const std::string m_DiffuseTextureFile;
 
 	VkImage m_Image{};
 	VkImageView m_ImageView{};

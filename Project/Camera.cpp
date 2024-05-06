@@ -39,17 +39,17 @@ void Camera::CalculateProjectionMatrix()
 void Camera::KeyEvent(int key, int scancode, int action, int mods)
 {
 
-	if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Forward;
+	if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Forward * m_TranslateSpeed;
 	
-	if (key == GLFW_KEY_S && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_Forward;
+	if (key == GLFW_KEY_S && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_Forward * m_TranslateSpeed;
 	
-	if (key == GLFW_KEY_A && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_Right;
+	if (key == GLFW_KEY_A && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_Right * m_TranslateSpeed;
 	
-	if (key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Right;
+	if (key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Right * m_TranslateSpeed;
 
-	if (key == GLFW_KEY_E && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_UnitY;
+	if (key == GLFW_KEY_E && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin -= m_UnitY * m_TranslateSpeed;
 	
-	if (key == GLFW_KEY_Q && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_UnitY;
+	if (key == GLFW_KEY_Q && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_UnitY * m_TranslateSpeed;
 	
 	if (key == GLFW_KEY_Z && (action == GLFW_REPEAT || action == GLFW_PRESS))
 	{

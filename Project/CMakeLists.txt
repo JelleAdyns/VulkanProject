@@ -8,6 +8,8 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
     "${SHADER_SOURCE_DIR}/shader.vert"
     "${SHADER_SOURCE_DIR}/objshader.frag"
     "${SHADER_SOURCE_DIR}/objshader.vert"
+    "${SHADER_SOURCE_DIR}/PBRshader.frag"
+    "${SHADER_SOURCE_DIR}/PBRshader.vert"
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
@@ -56,7 +58,8 @@ set(SOURCES
     "GP2UniformBufferObject.h" 
     "ContextStructs.h"
     "GP2Texture.h"
-    "GP2Texture.cpp")
+    "GP2Texture.cpp"
+    "GP2Material.h")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} )

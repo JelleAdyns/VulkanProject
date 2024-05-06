@@ -6,8 +6,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1200;
+const uint32_t HEIGHT = 800;
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
