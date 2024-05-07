@@ -13,10 +13,9 @@ class GP2GraphicsPipeline
 {
 public:
 
-	GP2GraphicsPipeline(const std::string& vertexShaderFile, const std::string& fragmentShaderFile, const std::string& diffuseTextureFile) :
+	GP2GraphicsPipeline(const std::string& vertexShaderFile, const std::string& fragmentShaderFile) :
 		m_VecMeshes{},
-		m_Shader{ vertexShaderFile,fragmentShaderFile },
-		m_DiffuseTexture{diffuseTextureFile}
+		m_Shader{ vertexShaderFile,fragmentShaderFile }
 	{}
 	~GP2GraphicsPipeline() = default;
 
@@ -27,8 +26,8 @@ public:
 
 	void Destroy(const VkDevice& device)
 	{
-		m_DiffuseTexture.DestroyTexture(device);
-		m_Shader.DestroyUniformObjects(device);
+		m_pDescriptorPool->DestroyPool(device);
+
 		vkDestroyPipeline(device, m_GraphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 	}
@@ -39,14 +38,16 @@ public:
 	void DestroyMeshes(const VkDevice& device);
 	void Initialize(const VulkanContext& vulkanContext, const MeshContext& meshContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat);
 
-	void AddMesh(const GP2Mesh<VertexType>& mesh);
 
+	void AddGP2Mesh(const GP2Mesh<VertexType>& mesh);
 	void UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex);
-	void UpdateUniformBuffer(glm::mat4 view, glm::mat4 projection);
+	void UpdateUniformBuffer(const glm::mat4& view, const glm::mat4& projection);
 	void Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const;
 
-private:
+	GP2DescriptorPool<ViewProjection, VertexType>* GetDescriptorPool() const { return m_pDescriptorPool.get(); }
+	const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_pDescriptorPool->GetDescriptorSetLayout(); }
 
+private:
 
 	void Draw(const VkCommandBuffer& cmdBuffer) const;
 
@@ -54,9 +55,9 @@ private:
 	VkPipeline m_GraphicsPipeline{};
 	VkRenderPass m_RenderPass{};
 
-	GP2Texture m_DiffuseTexture;
 	std::vector<GP2Mesh<VertexType>> m_VecMeshes;
 	GP2Shader<VertexType> m_Shader;
+	std::unique_ptr<GP2DescriptorPool<ViewProjection, VertexType>> m_pDescriptorPool;
 
 	void CreateGraphicsPipeline(const VkDevice& device);
 	VkPushConstantRange CreatePushConstantRange();
@@ -68,25 +69,33 @@ template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanContext, const MeshContext& meshContext, const VkFormat& swapChainImageFormat, const VkFormat& depthFormat)
 {
 	m_RenderPass = vulkanContext.renderPass;
-	m_DiffuseTexture.CreateTextureImage(meshContext);
-	m_Shader.Init(vulkanContext, m_DiffuseTexture);
+	m_Shader.Init(vulkanContext);
+	m_pDescriptorPool = std::make_unique<GP2DescriptorPool<ViewProjection, VertexType>>(vulkanContext.device, m_VecMeshes.size());
+	m_pDescriptorPool->Initialize(vulkanContext, m_VecMeshes);
 	CreateGraphicsPipeline(vulkanContext.device);
 
 }
+
 template<typename VertexType>
-void GP2GraphicsPipeline<VertexType>::AddMesh(const GP2Mesh<VertexType>& mesh)
-{
+void GP2GraphicsPipeline<VertexType>::AddGP2Mesh(const GP2Mesh<VertexType>& mesh)
+{	
 	m_VecMeshes.push_back(mesh);
 }
+
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex)
 {
 	m_VecMeshes[meshIndex].SetModelMatrix(MeshData{ model });
 }
 template <typename VertexType>
-void GP2GraphicsPipeline<VertexType>::UpdateUniformBuffer(glm::mat4 view, glm::mat4 projection)
+void GP2GraphicsPipeline<VertexType>::UpdateUniformBuffer(const glm::mat4& view, const glm::mat4& projection)
 {
-	m_Shader.UploadUBOMatrix(view, projection);
+	ViewProjection viewProj{};
+
+	viewProj.view = view;
+	viewProj.proj = projection;
+
+	m_pDescriptorPool->SetUBO(viewProj, 0);
 }
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const
@@ -178,7 +187,7 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	pipelineLayoutInfo.pushConstantRangeCount = 1;
 	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-	pipelineLayoutInfo.pSetLayouts = &m_Shader.GetDescriptorSetLayout();
+	pipelineLayoutInfo.pSetLayouts = &m_pDescriptorPool->GetDescriptorSetLayout();
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
 	{
@@ -230,10 +239,10 @@ VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange()
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Draw(const VkCommandBuffer& cmdBuffer) const
 {
-	m_Shader.GetDescriptorPool()->BindDescriptorSet(cmdBuffer, GetPipelineLayout(), 0);
-	for (const auto& mesh : m_VecMeshes)
+	for (size_t i = 0; i < m_VecMeshes.size(); i++)
 	{
-		mesh.Draw(GetPipelineLayout(), cmdBuffer);
+		m_pDescriptorPool->BindDescriptorSet(cmdBuffer, GetPipelineLayout(), i);
+		m_VecMeshes[i].Draw(GetPipelineLayout(), cmdBuffer);
 	}
 }
 

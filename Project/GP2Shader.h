@@ -4,7 +4,6 @@
 #include "Vertex.h"
 #include "GP2Buffer.h"
 #include "GP2DescriptorPool.h"
-#include "GP2Texture.h"
 #include "ContextStructs.h"
 
 template <typename VertexType>
@@ -29,18 +28,15 @@ public:
 	GP2Shader& operator=(const GP2Shader& other) = delete;
 	GP2Shader& operator=(GP2Shader&& other) noexcept = delete;
 	
-	void Init(const VulkanContext& vulkanContext, const GP2Texture& texture);
+	void Init(const VulkanContext& vulkanContext);
 	void DestroyShaderModules(const VkDevice& device);
-	void DestroyUniformObjects(const VkDevice& device);
 
 	const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStageInfos() const { return m_VecShadersStageInfos; }
-	GP2DescriptorPool<ViewProjection>* GetDescriptorPool() const { return m_pDescriptorPool.get(); }
-	const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_pDescriptorPool->GetDescriptorSetLayout(); }
+
 
 	VkPipelineInputAssemblyStateCreateInfo CreateInputAssemblyStateInfo();
 	VkPipelineVertexInputStateCreateInfo CreateVertexInputStateInfo();
 
-	void UploadUBOMatrix(const glm::mat4& view, const glm::mat4& projection);
 
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> m_VecShadersStageInfos;
@@ -48,7 +44,7 @@ private:
 	std::string m_VertexShaderFile;
 	std::string m_FragmentShaderFile;
 
-	std::unique_ptr<GP2DescriptorPool<ViewProjection>> m_pDescriptorPool;
+
 
 	std::vector<VkVertexInputAttributeDescription> m_AttributeDescriptions;
 	VkVertexInputBindingDescription m_InputBinding;
@@ -60,15 +56,10 @@ private:
 };
 
 template <typename VertexType>
-void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext, const GP2Texture& texture)
+void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext)
 {
 	m_VecShadersStageInfos.push_back(CreateFragmentShaderInfo(vulkanContext.device));
 	m_VecShadersStageInfos.push_back(CreateVertexShaderInfo(vulkanContext.device));
-	//m_UniformBuffer.CreateBuffer(vulkanContext.device, vulkanContext.physicalDevice, sizeof(VertexUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	//m_UniformBuffer.Map(vulkanContext.device);
-
-	m_pDescriptorPool = std::make_unique<GP2DescriptorPool<ViewProjection>>(vulkanContext.device, 1);
-	m_pDescriptorPool->Initialize(vulkanContext, texture);
 }
 template <typename VertexType>
 void GP2Shader<VertexType>::DestroyShaderModules(const VkDevice& device)
@@ -79,25 +70,7 @@ void GP2Shader<VertexType>::DestroyShaderModules(const VkDevice& device)
 	}
 	m_VecShadersStageInfos.clear();
 }
-template <typename VertexType>
-void GP2Shader<VertexType>::DestroyUniformObjects(const VkDevice& device)
-{
-	//vkDestroyBuffer(device, m_UniformBuffer.GetVkBuffer(), nullptr);
-	//vkFreeMemory(device, m_UniformBuffer.GetVkBufferMemory(), nullptr);
 
-	//vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
-	m_pDescriptorPool->DestroyPool(device);
-}
-template <typename VertexType>
-void GP2Shader<VertexType>::UploadUBOMatrix( const glm::mat4& view, const glm::mat4& projection)
-{
-	ViewProjection viewProj{};
-
-	viewProj.view = view;
-	viewProj.proj = projection;
-
-	m_pDescriptorPool->SetUBO(viewProj, 0);
-}
 template <typename VertexType>
 VkPipelineInputAssemblyStateCreateInfo GP2Shader<VertexType>::CreateInputAssemblyStateInfo()
 {

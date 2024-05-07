@@ -4,10 +4,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-void GP2Texture::CreateTextureImage(const MeshContext& meshContext)
+void GP2Texture::CreateTextureImage(const MeshContext& meshContext, const std::string& filename)
 {
+    m_TextureFile = filename;
     int texWidth{}, texHeight{}, texChannels{};
-    stbi_uc* pixels = stbi_load(m_DiffuseTextureFile.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(m_TextureFile.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) throw std::runtime_error("failed to load texture image!");

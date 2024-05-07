@@ -71,13 +71,10 @@ void VulkanBase::DrawFrame() {
 	birb = glm::rotate(birb, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_Pipeline3D.UpdateMeshMatrix(vehicle, 0);
-	m_Pipeline3D.UpdateMeshMatrix(birb, 1);
+	m_Pipeline3D.UpdateMeshMatrix(boat, 1);
+	m_Pipeline3D.UpdateMeshMatrix(birb, 2);
 	m_Pipeline3D.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_Pipeline3D.Record(m_CommandBuffer, swapChainExtent);
-
-	m_Pipeline3DBoat.UpdateMeshMatrix(boat, 0);
-	m_Pipeline3DBoat.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
-	m_Pipeline3DBoat.Record(m_CommandBuffer, swapChainExtent);
 
 
 	ViewProjection vp{};

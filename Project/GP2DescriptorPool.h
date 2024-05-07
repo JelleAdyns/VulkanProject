@@ -5,8 +5,9 @@
 #include "vulkanbase/VulkanUtil.h"
 #include "GP2UniformBufferObject.h"
 #include "GP2Texture.h"
+#include "GP2Mesh.h"
 
-template <typename UBO>
+template <typename UBO, typename VertexType>
 class GP2DescriptorPool
 {
 public:
@@ -18,7 +19,7 @@ public:
 	GP2DescriptorPool& operator=(const GP2DescriptorPool& other) = delete;
 	GP2DescriptorPool& operator=(GP2DescriptorPool&& other) noexcept = default;
 	
-	void Initialize(const VulkanContext& context, const GP2Texture& texture);
+	void Initialize(const VulkanContext& context, const std::vector<GP2Mesh<VertexType>>& vecMeshes);
 	
 	void SetUBO(UBO data, size_t index);
 	
@@ -27,10 +28,10 @@ public:
 	void BindDescriptorSet(VkCommandBuffer buffer, VkPipelineLayout layout, size_t index);
 	void DestroyPool(const VkDevice& device);
 
-	void CreateDescriptorSets(const VkDevice& device, const GP2Texture& texture);
 	
 private:
 
+	void CreateDescriptorSets(const VkDevice& device, const std::vector<GP2Mesh<VertexType>>& vecMeshes);
 	void CreateDescriptorSetLayout(const VkDevice& context);
 	void CreateUBOs(const VulkanContext & context);
 	
@@ -39,13 +40,14 @@ private:
 	VkDescriptorPool m_pDescriptorPool;
 	VkDescriptorSetLayout m_DescriptorSetLayout;
 	std::vector<VkDescriptorSet > m_DescriptorSets;
-	std::vector< std::unique_ptr< GP2UniformBufferObject< UBO > > > m_UBOs;
+	std::unique_ptr< GP2UniformBufferObject< UBO > > m_UBOs;
+	//std::vector< std::unique_ptr< GP2UniformBufferObject< UBO > > > m_UBOs;
 
 	
 };
 
-template <typename UBO>
-GP2DescriptorPool<UBO>::GP2DescriptorPool(const VkDevice& device, size_t count) :
+template <typename UBO, typename VertexType>
+GP2DescriptorPool<UBO, VertexType>::GP2DescriptorPool(const VkDevice& device, size_t count) :
 	m_Count{ count },
 	m_Size{ sizeof(UBO) },
 	m_pDescriptorPool{},
@@ -68,29 +70,34 @@ GP2DescriptorPool<UBO>::GP2DescriptorPool(const VkDevice& device, size_t count) 
 	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_pDescriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create descriptor pool!");
 	}
+
+	m_DescriptorSets.resize(m_Count);
 }
 
-template <typename UBO>
-void GP2DescriptorPool<UBO>::Initialize(const VulkanContext& context, const GP2Texture& texture)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::Initialize(const VulkanContext& context, const std::vector<GP2Mesh<VertexType>>& vecMeshes)
 {
 	CreateDescriptorSetLayout(context.device);
 	CreateUBOs(context);
-	CreateDescriptorSets(context.device, texture);
+	CreateDescriptorSets(context.device, vecMeshes);
 }
-template <typename UBO>
-void GP2DescriptorPool<UBO>::DestroyPool(const VkDevice& device)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::DestroyPool(const VkDevice& device)
 {
 
-	for (std::unique_ptr<GP2UniformBufferObject<UBO>>& buffer : m_UBOs)
+	/*for (std::unique_ptr<GP2UniformBufferObject<UBO>>& buffer : m_UBOs)
 	{
 		buffer->DestroyBuffer(device);
-	}
+	}*/
+
+	m_UBOs->DestroyBuffer(device);
+	
 	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 	vkDestroyDescriptorPool(device, m_pDescriptorPool, nullptr);
 
 }
-template <typename UBO>
-void GP2DescriptorPool<UBO>::CreateDescriptorSets(const VkDevice& device, const GP2Texture& texture)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::CreateDescriptorSets(const VkDevice& device, const std::vector<GP2Mesh<VertexType>>& vecMeshes)
 {
 	std::vector<VkDescriptorSetLayout> layouts(m_Count, m_DescriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -99,16 +106,19 @@ void GP2DescriptorPool<UBO>::CreateDescriptorSets(const VkDevice& device, const 
 	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Count);
 	allocInfo.pSetLayouts = layouts.data();
 
-	m_DescriptorSets.resize(m_Count);
+
 	if (vkAllocateDescriptorSets(device, &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
 	size_t i = 0;
-	for (std::unique_ptr<GP2UniformBufferObject<UBO>>& buffer : m_UBOs)
+	//for (std::unique_ptr<GP2UniformBufferObject<UBO>>& buffer : m_UBOs)
+	for (const auto& mesh : vecMeshes)
 	{
+		const auto& texture = mesh.GetTexture();
+
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = buffer->GetVkBuffer();
+		bufferInfo.buffer = m_UBOs->GetVkBuffer();
 		bufferInfo.offset = 0;
 		bufferInfo.range = m_Size;
 
@@ -142,14 +152,14 @@ void GP2DescriptorPool<UBO>::CreateDescriptorSets(const VkDevice& device, const 
 
 }
 
-template <typename UBO>
-void GP2DescriptorPool<UBO>::BindDescriptorSet(VkCommandBuffer buffer, VkPipelineLayout layout, size_t index)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::BindDescriptorSet(VkCommandBuffer buffer, VkPipelineLayout layout, size_t index)
 {
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, static_cast<uint32_t>(m_DescriptorSets.size()), &m_DescriptorSets[index], 0, nullptr);
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &m_DescriptorSets[index], 0, nullptr);
 }
 
-template <typename UBO>
-void GP2DescriptorPool<UBO>::CreateDescriptorSetLayout(const VkDevice& vkDevice)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::CreateDescriptorSetLayout(const VkDevice& vkDevice)
 {
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding = 0;
@@ -177,23 +187,28 @@ void GP2DescriptorPool<UBO>::CreateDescriptorSetLayout(const VkDevice& vkDevice)
 	}
 }
 
-template<class UBO>
-void GP2DescriptorPool<UBO>::CreateUBOs(const VulkanContext& context)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::CreateUBOs(const VulkanContext& context)
 {
-	for (int uboIndex = 0; uboIndex < m_Count; ++uboIndex)
+	/*for (int uboIndex = 0; uboIndex < m_Count; ++uboIndex)
 	{
 		auto buffer = std::make_unique<GP2UniformBufferObject<UBO>>();
 		buffer->Initialize(context);
 		m_UBOs.emplace_back(std::move(buffer));
-	}
+	}*/
+
+	m_UBOs = std::make_unique<GP2UniformBufferObject<UBO>>();
+	m_UBOs->Initialize(context);
 }
 
-template<class UBO>
-void GP2DescriptorPool<UBO>::SetUBO(UBO src, size_t index)
+template <typename UBO, typename VertexType>
+void GP2DescriptorPool<UBO, VertexType>::SetUBO(UBO src, size_t index)
 {
-	if (index < m_UBOs.size())
+	/*if (index < m_UBOs.size())
 	{
 		m_UBOs[index]->SetData(src);
 		m_UBOs[index]->Upload();
-	}
+	}*/
+		m_UBOs->SetData(src);
+		m_UBOs->Upload();
 }

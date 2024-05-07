@@ -105,22 +105,39 @@ private:
 			swapChainExtent
 		};
 		m_CommandPool.Initialize(device, FindQueueFamilies(physicalDevice));
-		
-		m_Pipeline3DBoat.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
-		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
-		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
+	
 		
 		// week 02
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
+		
+		auto&	vehicleMesh = CreateMesh("Resources/vehicle.obj", meshContext);
+		vehicleMesh.SetTexture(meshContext, "Resources/vehicle_diffuse.png");
 
-		m_Pipeline3D.AddMesh(CreateMesh("Resources/vehicle.obj", meshContext));
-		m_Pipeline3DBoat.AddMesh(CreateMesh("Resources/Boat.obj", meshContext));
-		m_Pipeline3D.AddMesh(CreateMesh("Resources/birb.obj", meshContext));
+		auto& boatMesh = CreateMesh("Resources/Boat.obj", meshContext);
+		boatMesh.SetTexture(meshContext,"Resources/T_Boat_Color.jpg");
 
-		m_Pipeline2D.AddMesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
-		m_Pipeline2D.AddMesh(CreateRoundedRectangle(0,	1000, 200, WIDTH, 50.f, 50.f, 10, meshContext));
-		m_Pipeline2D.AddMesh(CreateOval(WIDTH -100.f, HEIGHT - 100.f, 100, 100, 40, meshContext));
+		auto& birbMesh = CreateMesh("Resources/birb.obj", meshContext);
+		birbMesh.SetTexture(meshContext, "Resources/vehicle_diffuse.png");
 
+		m_Pipeline3D.AddGP2Mesh(vehicleMesh);
+		m_Pipeline3D.AddGP2Mesh(boatMesh);
+		m_Pipeline3D.AddGP2Mesh(birbMesh);
+
+		auto& rectMesh = CreateRectangle(500, 20, HEIGHT, 300, meshContext);
+		rectMesh.SetTexture(meshContext,"Resources/texture.jpg");
+
+		auto& roundedRectMesh = CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext);
+		roundedRectMesh.SetTexture(meshContext,"Resources/texture.jpg");
+
+		auto& ovalMesh = CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext);
+		ovalMesh.SetTexture(meshContext,"Resources/texture.jpg");
+
+		m_Pipeline2D.AddGP2Mesh(rectMesh);
+		m_Pipeline2D.AddGP2Mesh(roundedRectMesh);
+		m_Pipeline2D.AddGP2Mesh(ovalMesh);
+	
+		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
+		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 		CreateDepthResources();
@@ -143,7 +160,6 @@ private:
 	{
 		CleanupSwapChain();
 
-		m_Pipeline3DBoat.Destroy(device);
 		m_Pipeline3D.Destroy(device);
 		m_Pipeline2D.Destroy(device);
 		vkDestroyRenderPass(device, m_RenderPass, nullptr);
@@ -158,7 +174,7 @@ private:
 		m_CommandPool.DestroyCommandPool(device);
 
 		//m_Shader.DestroyUniformObjects(device);
-		m_Pipeline3DBoat.DestroyMeshes(device);
+
 		m_Pipeline3D.DestroyMeshes(device);
 		m_Pipeline2D.DestroyMeshes(device);
 
@@ -205,9 +221,9 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	VkRenderPass m_RenderPass{};
-	GP2GraphicsPipeline<Vertex3D> m_Pipeline3DBoat{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv", "Resources/T_Boat_Color.jpg"};
-	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv", "Resources/vehicle_diffuse.png"};
-	GP2GraphicsPipeline<Vertex2D> m_Pipeline2D{ "shaders/shader.vert.spv", "shaders/shader.frag.spv", "Resources/texture.jpg" };
+
+	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv"};
+	GP2GraphicsPipeline<Vertex2D> m_Pipeline2D{ "shaders/shader.vert.spv", "shaders/shader.frag.spv"};
 
 	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
 	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);

@@ -2,6 +2,7 @@
 #include "vulkanbase/VulkanUtil.h"
 #include "ContextStructs.h"
 #include "GP2Buffer.h"
+#include "GP2Texture.h"
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
 #include <vector>
@@ -26,15 +27,18 @@ public:
 	void AddIndex(uint32_t index);
 
 	void SetModelMatrix(const MeshData& meshData);
+
+	GP2Texture GetTexture() const;
+	void SetTexture(const MeshContext& meshContext, const std::string& filename);
 private:
 
 	void CopyBuffer(const MeshContext& meshContext, VkDeviceSize size, VkBuffer src, VkBuffer dst);
 
-	GP2Texture* m_Texture;
-	GP2Buffer m_VertexBuffer;
-	GP2Buffer m_IndexBuffer;
-	std::vector<VertexType> m_VecVertices;
-	std::vector<uint32_t> m_VecIndices;
+	GP2Texture m_Texture{};
+	GP2Buffer m_VertexBuffer{};
+	GP2Buffer m_IndexBuffer{};
+	std::vector<VertexType> m_VecVertices{};
+	std::vector<uint32_t> m_VecIndices{};
 	MeshData m_VertexConstant{};
 };
 
@@ -79,6 +83,7 @@ void GP2Mesh<VertexType>::UploadBuffers(const MeshContext& meshContext)
 template <typename VertexType>
 void GP2Mesh<VertexType>::DestroyMesh(const VkDevice& device)
 {
+	m_Texture.DestroyTexture(device);
 	m_VertexBuffer.DestroyBuffer(device);
 	m_IndexBuffer.DestroyBuffer(device);
 }
@@ -132,6 +137,18 @@ template<typename VertexType>
 inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 {
 	m_VertexConstant = meshData;
+}
+
+template<typename VertexType>
+inline GP2Texture GP2Mesh<VertexType>::GetTexture() const
+{
+	return m_Texture;
+}
+
+template<typename VertexType>
+void GP2Mesh<VertexType>::SetTexture(const MeshContext& meshContext, const std::string& filename)
+{
+	m_Texture.CreateTextureImage(meshContext, filename);
 }
 
 static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = false)
