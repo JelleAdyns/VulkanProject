@@ -188,21 +188,7 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 
 	uint32_t currIndex{};
 
-	Vertex3D topPoint{};
-	topPoint.pos = glm::vec3{ center.x, center.y + radius, center.z };
-	topPoint.normal = glm::vec3{ glm::normalize(topPoint.pos) };
-	topPoint.texCoord = glm::vec2{ 0.5f, 0 };
-	sphere.AddVertex(topPoint);
-
-	Vertex3D bottomPoint{};
-	bottomPoint.pos = glm::vec3{ center.x, center.y - radius, center.z };
-	bottomPoint.normal = glm::vec3{ glm::normalize(bottomPoint.pos) };
-	bottomPoint.texCoord = glm::vec2{ 0.5f, 1 };
-	sphere.AddVertex(bottomPoint);
-
-	++currIndex;
-
-	double pi{ glm::pi<double>() };
+	constexpr double pi{ glm::pi<double>() };
 	float stepHeight{ radius / (nrOfYDivisions / 2) };
 	double stepAngle{ pi / nrOfYDivisions };
 	Vertex3D currEdgeVertex{};
@@ -210,15 +196,15 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 	
 	std::vector<Vertex3D> firstVertices{  };
 
-	firstVertices.resize(nrOfYDivisions - 1);
+	firstVertices.resize(nrOfYDivisions +1);
 
 	for (size_t yIndex = 0; yIndex < firstVertices.size(); yIndex++)
 	{
-		auto cosValue = glm::cos(stepAngle * (yIndex+1) - (pi / 2));
-		auto sinValue = glm::sin(stepAngle * (yIndex+1) - (pi / 2));
+		float cosValue = static_cast<float>(glm::cos(stepAngle * (yIndex) - (pi / 2)));
+		float sinValue = static_cast<float>(glm::sin(stepAngle * (yIndex) - (pi / 2)));
 
 		currEdgeVertex.pos.x = center.x + radius * cosValue;
-		currEdgeVertex.pos.y = center.y - radius * sinValue;
+		currEdgeVertex.pos.y = center.y + radius * sinValue;
 		currEdgeVertex.pos.z = center.z;
 
 		firstVertices[yIndex] = currEdgeVertex;
@@ -229,95 +215,37 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 	for (size_t yIndex = 0; yIndex < firstVertices.size(); yIndex++)
 	{
 		std::vector<Vertex3D> xDivisionVertices{  };
-		xDivisionVertices.resize(nrOfXDivisions -1);
+		xDivisionVertices.resize(nrOfXDivisions+1);
 		for (int xIndex = 0; xIndex < xDivisionVertices.size(); xIndex++)
 		{
 
 			float xRadius = std::abs(firstVertices[yIndex].pos.x - center.x);
-			double stepXAngle{ pi * 2 / nrOfXDivisions };
+			float stepXAngle{ static_cast<float>(pi * 2 / nrOfXDivisions) };
 
-			auto cosValue = glm::cos(stepXAngle * (xIndex+1));
-			auto sinValue = glm::sin(stepXAngle * (xIndex+1));
+			auto cosValue = glm::cos(stepXAngle * (xIndex));
+			auto sinValue = glm::sin(stepXAngle * (xIndex));
 
 			xDivisionVertices[xIndex].pos.x = (center.x + xRadius * cosValue);
 			xDivisionVertices[xIndex].pos.y = firstVertices[yIndex].pos.y;
 			xDivisionVertices[xIndex].pos.z = (center.z + xRadius * sinValue);
 
-			
+			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, -(xDivisionVertices[xIndex].pos.y / (radius * 2) + 1) / 2 };
+			xDivisionVertices[xIndex].normal = glm::vec3{ glm::normalize(xDivisionVertices[xIndex].pos )};
+			sphere.AddVertex(xDivisionVertices[xIndex]);
 
-		}
-
-		firstVertices[yIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * ((currIndex + 1 - 2) % nrOfXDivisions), (firstVertices[yIndex].pos.y / (radius * 2) + 1) / 2 };
-		firstVertices[yIndex].normal = glm::vec3{ glm::normalize( firstVertices[yIndex].pos )};
-		sphere.AddVertex(firstVertices[yIndex]);
-		++currIndex;
-		
-
-		for (int i = 0; i < xDivisionVertices.size(); i++)
-		{
-			if (yIndex == 0)
-			{
-				sphere.AddIndex(currIndex);
-				sphere.AddIndex(0);
-			}
-			else
-			{
-				sphere.AddIndex(currIndex);
-				sphere.AddIndex(currIndex - nrOfXDivisions);
-			}
-
-			xDivisionVertices[i].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * ((currIndex + 1 - 2) % nrOfXDivisions), (xDivisionVertices[i].pos.y / (radius * 2) + 1) / 2 };
-			xDivisionVertices[i].normal = glm::vec3{ glm::normalize( xDivisionVertices[i].pos )};
-			sphere.AddVertex(xDivisionVertices[i]);
-			++currIndex;
+			if(yIndex != 0 || xIndex != 0)++currIndex;
 
 			sphere.AddIndex(currIndex);
+			sphere.AddIndex(currIndex + nrOfXDivisions + 1);
+			sphere.AddIndex(currIndex + 1);
 
-			if (yIndex > 0)
-			{
-				sphere.AddIndex(currIndex);
-				sphere.AddIndex(currIndex - nrOfXDivisions - 1);
-				sphere.AddIndex(currIndex - nrOfXDivisions);
-			}
+			sphere.AddIndex(currIndex + nrOfXDivisions + 1);
+			sphere.AddIndex(currIndex + nrOfXDivisions + 1 + 1);
+			sphere.AddIndex(currIndex + 1);
 
-		}
-
-		if (yIndex == 0)
-		{
-			sphere.AddIndex(0);
-			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
-			sphere.AddIndex(currIndex);
-		}
-		else
-		{
-			sphere.AddIndex(currIndex);
-			sphere.AddIndex(currIndex - nrOfXDivisions);
-			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
-
-			sphere.AddIndex(currIndex - nrOfXDivisions);
-			sphere.AddIndex(currIndex - nrOfXDivisions - (nrOfXDivisions-1));
-			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
-		}
-
-		// Bottom Cicle
-		if (yIndex == firstVertices.size() - 1)
-		{
-			for (int i = 0; i < xDivisionVertices.size(); i++)
-			{
-
-				sphere.AddIndex(1);
-				sphere.AddIndex(currIndex - (i+1));
-				sphere.AddIndex(currIndex - i);
-
-			}
-
-			sphere.AddIndex(1);
-			sphere.AddIndex(currIndex);
-			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
 		}
 
 	}
-
 
 
 	sphere.UploadBuffers(meshContext);

@@ -127,7 +127,7 @@ private:
 
 
 		m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
-		m_PipelineDiffuse.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, -20.f},100.f, 40, 40, meshContext));
+		m_PipelineDiffuse.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, 0.f},100.f, 20, 20, meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
 

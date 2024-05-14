@@ -66,11 +66,14 @@ void VulkanBase::DrawFrame() {
 	auto boat = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
 	boat = glm::scale(boat, glm::vec3(0.25f, 0.25f, 0.25f));
 	
+	auto orb = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 100.0f));
+	
 
 	auto birb = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 50.0f));
 	birb = glm::rotate(birb, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_PipelineDiffuse.UpdateMeshMatrix(boat, 0);
+	m_PipelineDiffuse.UpdateMeshMatrix(orb, 1);
 	m_PipelineDiffuse.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_PipelineDiffuse.Record(m_CommandBuffer, swapChainExtent);
 
