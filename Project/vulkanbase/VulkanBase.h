@@ -24,6 +24,7 @@
 #include "Vertex.h"
 #include "Camera.h"
 #include "ContextStructs.h"
+#include <map>
 
 
 const std::vector<const char*> validationLayers = 
@@ -110,32 +111,86 @@ private:
 		// week 02
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
 		
-		auto&	vehicleMesh = CreateMesh("Resources/vehicle.obj", meshContext);
-		vehicleMesh.SetTexture(meshContext, "Resources/vehicle_diffuse.png");
+		const std::string statueTexture{ "Resources/texture.jpg" };
+		const std::string vehicleDiffuse{ "Resources/vehicle_diffuse.png"  };
+		const std::string vehicleNormal{ "Resources/vehicle_normal.png"  };
+		const std::string vehicleroughness{ "Resources/vehicle_gloss.png"  };
+		const std::string vehicleSpecular{ "Resources/vehicle_specular.png"  };
+		const std::string boatDiffuse{ "Resources/T_Boat_Color.jpg" };
+
+		m_pMapTextures[statueTexture] = std::make_unique<GP2Texture>(meshContext, statueTexture);
+		m_pMapTextures[vehicleDiffuse] = std::make_unique<GP2Texture>(meshContext, vehicleDiffuse);
+		m_pMapTextures[vehicleNormal] = std::make_unique<GP2Texture>(meshContext, vehicleNormal);
+		m_pMapTextures[vehicleroughness] = std::make_unique<GP2Texture>(meshContext, vehicleroughness);
+		m_pMapTextures[vehicleSpecular] = std::make_unique<GP2Texture>(meshContext, vehicleSpecular);
+		m_pMapTextures[boatDiffuse] = std::make_unique<GP2Texture>(meshContext, boatDiffuse);
+
+
+		m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
+		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
+		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
+
+
+		GP2Material* vehicleMaterial{ new GP2Material{} };
+		vehicleMaterial->m_Diffuse = m_pMapTextures.at(vehicleDiffuse).get();
+		vehicleMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
+		vehicleMaterial->m_Roughness = m_pMapTextures.at(vehicleroughness).get();
+		vehicleMaterial->m_Specular = m_pMapTextures.at(vehicleSpecular).get();
+
+		GP2Material* boatMaterial{ new GP2Material{} };
+		boatMaterial->m_Diffuse = m_pMapTextures.at(boatDiffuse).get();
+		boatMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
+		boatMaterial->m_Roughness = m_pMapTextures.at(vehicleroughness).get();
+		boatMaterial->m_Specular = m_pMapTextures.at(vehicleSpecular).get();
+
+		GP2Material* birbMaterial{ new GP2Material{} };
+		birbMaterial->m_Diffuse = m_pMapTextures.at(vehicleDiffuse).get();
+		birbMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
+
+		GP2Material* statueMat{ new GP2Material{} };
+		statueMat->m_Diffuse = m_pMapTextures.at(statueTexture).get();
+		statueMat->m_Normal = m_pMapTextures.at(statueTexture).get();
+		statueMat->m_Roughness = m_pMapTextures.at(statueTexture).get();
+		statueMat->m_Specular = m_pMapTextures.at(statueTexture).get();
+
+		m_PipelineDiffuse.SetMaterial(boatMaterial,0);
+		m_Pipeline3D.SetMaterial(vehicleMaterial, 0);
+		m_Pipeline3D.SetMaterial(vehicleMaterial,1);
 
 		auto& boatMesh = CreateMesh("Resources/Boat.obj", meshContext);
 		boatMesh.SetTexture(meshContext,"Resources/T_Boat_Color.jpg");
 
-		auto& birbMesh = CreateMesh("Resources/birb.obj", meshContext);
-		birbMesh.SetTexture(meshContext, "Resources/vehicle_diffuse.png");
+		m_Pipeline2D.AddGP2Mesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
+		m_Pipeline2D.AddGP2Mesh(CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext));
+		m_Pipeline2D.AddGP2Mesh(CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext));
 
 		m_Pipeline3D.AddGP2Mesh(vehicleMesh);
 		m_Pipeline3D.AddGP2Mesh(boatMesh);
 		m_Pipeline3D.AddGP2Mesh(birbMesh);
 
-		auto& rectMesh = CreateRectangle(500, 20, HEIGHT, 300, meshContext);
-		rectMesh.SetTexture(meshContext,"Resources/texture.jpg");
+		GP2Material* V2DMaterial{ new GP2Material{} };
+		V2DMaterial->m_Diffuse = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial->m_Normal = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial->m_Roughness = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial->m_Specular = m_pMapTextures.at(statueTexture).get();
 
-		auto& roundedRectMesh = CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext);
-		roundedRectMesh.SetTexture(meshContext,"Resources/texture.jpg");
+		GP2Material* V2DMaterial2{ new GP2Material{} };
+		V2DMaterial2->m_Diffuse = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial2->m_Normal = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial2->m_Roughness = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial2->m_Specular = m_pMapTextures.at(statueTexture).get();
 
-		auto& ovalMesh = CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext);
-		ovalMesh.SetTexture(meshContext,"Resources/texture.jpg");
+		GP2Material* V2DMaterial3{ new GP2Material{} };
+		V2DMaterial3->m_Diffuse = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial3->m_Normal = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial3->m_Roughness = m_pMapTextures.at(statueTexture).get();
+		V2DMaterial3->m_Specular = m_pMapTextures.at(statueTexture).get();
 
-		m_Pipeline2D.AddGP2Mesh(rectMesh);
-		m_Pipeline2D.AddGP2Mesh(roundedRectMesh);
-		m_Pipeline2D.AddGP2Mesh(ovalMesh);
+		m_Pipeline2D.SetMaterial(V2DMaterial,0);
+		m_Pipeline2D.SetMaterial(V2DMaterial2,1);
+		m_Pipeline2D.SetMaterial(V2DMaterial3,2);
 	
+		m_PipelineDiffuse.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 
@@ -160,6 +215,7 @@ private:
 	{
 		CleanupSwapChain();
 
+		m_PipelineDiffuse.Destroy(device);
 		m_Pipeline3D.Destroy(device);
 		m_Pipeline2D.Destroy(device);
 		vkDestroyRenderPass(device, m_RenderPass, nullptr);
@@ -175,6 +231,7 @@ private:
 
 		//m_Shader.DestroyUniformObjects(device);
 
+		m_PipelineDiffuse.DestroyMeshes(device);
 		m_Pipeline3D.DestroyMeshes(device);
 		m_Pipeline2D.DestroyMeshes(device);
 
@@ -222,8 +279,11 @@ private:
 
 	VkRenderPass m_RenderPass{};
 
-	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv"};
+	GP2GraphicsPipeline<Vertex3D> m_PipelineDiffuse{ "shaders/objshader.vert.spv", "shaders/objshader.frag.spv"};
+	GP2GraphicsPipeline<Vertex3D> m_Pipeline3D{ "shaders/PBRshader.vert.spv", "shaders/PBRshader.frag.spv"};
 	GP2GraphicsPipeline<Vertex2D> m_Pipeline2D{ "shaders/shader.vert.spv", "shaders/shader.frag.spv"};
+
+	std::map<std::string, std::unique_ptr<GP2Texture>> m_pMapTextures;
 
 	void BeginRenderPass(const GP2CommandBuffer& cmdBuffer, VkFramebuffer currFrameBuffer, VkExtent2D extent);
 	void EndRenderPass(const GP2CommandBuffer& cmdBuffer);

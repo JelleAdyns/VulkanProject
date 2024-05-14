@@ -1,20 +1,86 @@
 #version 450
 
+
 layout(binding = 1) uniform sampler2D diffuseTexSampler;
 layout(binding = 2) uniform sampler2D normalTexSampler;
+layout(binding = 3) uniform sampler2D roughnessTexSampler;
+layout(binding = 4) uniform sampler2D specularTexSampler;
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec2 fragTexCoord;
+layout(location = 2) in vec3 fragTangent;
+layout(location = 3) in vec2 fragTexCoord;
+layout(location = 4) in vec4 fragWorldPos;
+layout(location = 5) in vec3 fragCameraPos;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    const vec3 lightDirection = normalize(vec3(0.0, 1.0, -1.0));
-    float diff = max(dot(fragNormal, lightDirection), 0.2);
-    vec3 diffuse = diff*fragColor;
+    //------------------
+    // CONSTANTS
+
+    const vec3 lightDirection = vec3(.577f, -.577f, .577f);
+    const float lightIntensity = 7.f;
+    const float shininess = 25.f;
+    const vec3 ambient = { 0.03f, 0.03f, 0.03f };
+    const float PI = 3.14159265358979323846f;
+
+    //------------------
+
+    //------------------
+    // NORMAL CALCULATIONS
+
+    vec3 biNormal = cross(fragNormal, fragTangent);
+    mat3x3 tangentSpaceAxis = mat3x3(fragTangent, biNormal, fragNormal);
+    vec3 normalSample = texture(normalTexSampler, fragTexCoord).rgb * 2 - vec3(1.f, 1.f, 1.f);
     
-    //outColor = vec4(diffuse, 1.0);
-    outColor = vec4(diffuse, 1.0) * texture(diffuseTexSampler, fragTexCoord);
+    normalSample = normalize(tangentSpaceAxis * normalSample);
+
+    float observedArea = dot(normalSample, -lightDirection);
+    //float observedArea = dot(fragNormal, -lightDirection); //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    //------------------
+
+
+
+
+    if (observedArea > 0) 
+    {
+        //------------------
+        // DIFFUSE CALCUATIONS
+
+        //vec3 diffuse = (lightIntensity *  texture(diffuseTexSampler, fragTexCoord).rgb / PI) * observedArea; //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        //------------------
+
+
+        //------------------
+        // GLOSS CALCUATIONS
+
+        //vec3 reflection = reflect(lightDirection, normalSample);
+        //vec3 reflection = reflect(lightDirection, fragNormal); //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        //vec3 invViewDirection = normalize(fragCameraPos - fragWorldPos.xyz );
+
+       // const float cosAlpha = max(0.f, dot(reflection,invViewDirection));
+        //const vec3 specular = pow(cosAlpha, texture(roughnessTexSampler, fragTexCoord).r * shininess) * texture(specularTexSampler, fragTexCoord).rgb;
+
+        //------------------
+
+
+        //------------------
+        // OUPUT
+
+        //outColor = clamp(vec4(diffuse ,0.f),0.f,1.f); //CORRECT!!!!!!!!!!!!!!!!!!!
+        //outColor = clamp(vec4(specular ,0.f),0.f,1.f);
+        //outColor = clamp(vec4(diffuse  + specular,0.f),0.f,1.f);
+        outColor = clamp(vec4(observedArea,observedArea,observedArea, 0.f),0.f,1.f);
+
+        //------------------
+    }
+    else
+    {
+        outColor = vec4(0.f,0.f,0.f, 0.0f);
+    }
 }

@@ -3,11 +3,14 @@
 #include "ContextStructs.h"
 #include "GP2Buffer.h"
 #include "GP2Texture.h"
+#include "GP2Material.h"
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
 #include <vector>
 #include "Vertex.h"
 #include "OBJParser.h"
+#include <glm/ext/scalar_constants.hpp>
+
 
 class GP2CommandPool;
 
@@ -28,13 +31,13 @@ public:
 
 	void SetModelMatrix(const MeshData& meshData);
 
-	GP2Texture GetTexture() const;
-	void SetTexture(const MeshContext& meshContext, const std::string& filename);
+	GP2Material* GetMaterial() const;
+	void SetMaterial(GP2Material* newMaterial);
 private:
 
 	void CopyBuffer(const MeshContext& meshContext, VkDeviceSize size, VkBuffer src, VkBuffer dst);
 
-	GP2Texture m_Texture{};
+	GP2Material* m_pMaterial{nullptr};
 	GP2Buffer m_VertexBuffer{};
 	GP2Buffer m_IndexBuffer{};
 	std::vector<VertexType> m_VecVertices{};
@@ -45,6 +48,8 @@ private:
 template <typename VertexType>
 void GP2Mesh<VertexType>::UploadBuffers(const MeshContext& meshContext)
 {
+	if (m_VecIndices.size() % 3 != 0) throw std::runtime_error{ "Amount of indices is not a multiple of 3!" };
+
 	VkDeviceSize size = sizeof(m_VecVertices[0]) * m_VecVertices.size();
 	GP2Buffer stagingBuffer{};
 	void* data;
@@ -83,7 +88,10 @@ void GP2Mesh<VertexType>::UploadBuffers(const MeshContext& meshContext)
 template <typename VertexType>
 void GP2Mesh<VertexType>::DestroyMesh(const VkDevice& device)
 {
-	m_Texture.DestroyTexture(device);
+	m_pMaterial->m_Diffuse->DestroyTexture(device);
+	m_pMaterial->m_Normal->DestroyTexture(device);
+	m_pMaterial->m_Roughness->DestroyTexture(device);
+	m_pMaterial->m_Specular->DestroyTexture(device);
 	m_VertexBuffer.DestroyBuffer(device);
 	m_IndexBuffer.DestroyBuffer(device);
 }
@@ -103,6 +111,7 @@ void GP2Mesh<VertexType>::Draw(VkPipelineLayout pipelineLayout, const VkCommandB
 		sizeof(MeshData), // Size of the push constants to update
 		& m_VertexConstant // Pointer to the data
 		);
+
 
 	vkCmdDrawIndexed(cmdBuffer, static_cast<uint32_t>(m_VecIndices.size()), 1, 0, 0, 0);
 }
@@ -140,18 +149,18 @@ inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 }
 
 template<typename VertexType>
-inline GP2Texture GP2Mesh<VertexType>::GetTexture() const
+inline GP2Material* GP2Mesh<VertexType>::GetMaterial() const
 {
-	return m_Texture;
+	return m_pMaterial;
 }
 
 template<typename VertexType>
-void GP2Mesh<VertexType>::SetTexture(const MeshContext& meshContext, const std::string& filename)
+void GP2Mesh<VertexType>::SetMaterial(GP2Material* newMaterial)
 {
-	m_Texture.CreateTextureImage(meshContext, filename);
+	m_pMaterial = newMaterial;
 }
 
-static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = false)
+static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = true)
 {
 
 	GP2Mesh<Vertex3D> mesh{};
@@ -178,7 +187,7 @@ static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, fl
 
 	assert((left < right) && "Left is greater than right");
 	assert((top < bottom) && "Top is greater than bottom");
-	GP2Mesh<Vertex2D> rect;
+	GP2Mesh<Vertex2D> rect{};
 	constexpr int nrOfVertices{ 4 };
 	constexpr int nrOfIndices{ 6 };
 
@@ -217,7 +226,7 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 	float width = right - left;
 	float height = bottom - top;
 
-	int currMaxIndex{ -1 };
+	uint32_t currMaxIndex{  };
 	GP2Mesh<Vertex2D> rect{};
 
 	//MiddleRect
@@ -231,7 +240,7 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 	rect.AddVertex(verticesMiddleRect[1]);
 	rect.AddVertex(verticesMiddleRect[2]);
 	rect.AddVertex(verticesMiddleRect[3]);
-	currMaxIndex += 4;
+	currMaxIndex += 3;
 
 	rect.AddIndex(0);
 	rect.AddIndex(1);
@@ -468,16 +477,18 @@ static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX,
 
 	float radians = pi * 2 / numberOfSegments;
 
-	GP2Mesh<Vertex2D> oval;
+	GP2Mesh<Vertex2D> oval{};
 
 	Vertex2D center{ glm::vec2{centerX, centerY}, glm::vec3{0.0f,0.0f,1.0f},glm::vec2{0.5f,0.5f} };
 	Vertex2D currEdgeVertex { {}, glm::vec3{0.0f,1.0f,0.0f} };
+
+
 
 	oval.AddVertex(center);
 	for (int i = 1; i <= numberOfSegments; i++)
 	{
 		auto cosValue = glm::cos(radians * i);
-		auto sinValue = glm::sin(radians * i);
+		auto sinValue = glm::sin(-radians * i);
 
 		currEdgeVertex.texCoord.x = (cosValue+1)/2;
 		currEdgeVertex.texCoord.y = (sinValue+1)/2;
@@ -486,6 +497,7 @@ static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX,
 
 		oval.AddVertex(currEdgeVertex);
 
+		oval.AddIndex(i);
 		oval.AddIndex(0);
 		oval.AddIndex(i);
 		if (i == numberOfSegments) oval.AddIndex(1);

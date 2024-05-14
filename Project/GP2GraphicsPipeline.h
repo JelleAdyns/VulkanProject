@@ -41,11 +41,9 @@ public:
 
 	void AddGP2Mesh(const GP2Mesh<VertexType>& mesh);
 	void UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex);
+	void SetMaterial(GP2Material* pMaterial, int meshIndex);
 	void UpdateUniformBuffer(const glm::mat4& view, const glm::mat4& projection);
 	void Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const;
-
-	GP2DescriptorPool<ViewProjection, VertexType>* GetDescriptorPool() const { return m_pDescriptorPool.get(); }
-	const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_pDescriptorPool->GetDescriptorSetLayout(); }
 
 private:
 
@@ -60,7 +58,7 @@ private:
 	std::unique_ptr<GP2DescriptorPool<ViewProjection, VertexType>> m_pDescriptorPool;
 
 	void CreateGraphicsPipeline(const VkDevice& device);
-	VkPushConstantRange CreatePushConstantRange();
+	VkPushConstantRange CreatePushConstantRange(VkShaderStageFlagBits shaderStage, uint32_t offset, uint32_t sizeOfObject);
 };
 
 
@@ -70,8 +68,9 @@ void GP2GraphicsPipeline<VertexType>::Initialize(const VulkanContext& vulkanCont
 {
 	m_RenderPass = vulkanContext.renderPass;
 	m_Shader.Init(vulkanContext);
-	m_pDescriptorPool = std::make_unique<GP2DescriptorPool<ViewProjection, VertexType>>(vulkanContext.device, m_VecMeshes.size());
-	m_pDescriptorPool->Initialize(vulkanContext, m_VecMeshes);
+
+	m_pDescriptorPool = std::make_unique<GP2DescriptorPool<ViewProjection, VertexType>>(vulkanContext, m_VecMeshes);
+
 	CreateGraphicsPipeline(vulkanContext.device);
 
 }
@@ -86,6 +85,11 @@ template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex)
 {
 	m_VecMeshes[meshIndex].SetModelMatrix(MeshData{ model });
+}
+template<typename VertexType>
+inline void GP2GraphicsPipeline<VertexType>::SetMaterial(GP2Material* pMaterial, int meshIndex)
+{
+	m_VecMeshes[meshIndex].SetMaterial(pMaterial);
 }
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::UpdateUniformBuffer(const glm::mat4& view, const glm::mat4& projection)
@@ -179,13 +183,16 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 
-	VkPushConstantRange pushConstantRange = CreatePushConstantRange();
+	VkPushConstantRange pushConstantRangeMesh = CreatePushConstantRange(VK_SHADER_STAGE_VERTEX_BIT,0, sizeof(MeshData));
+	//VkPushConstantRange pushConstantRangeCamera = CreatePushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT,1, sizeof(m_CameraPos));
+	std::vector< VkPushConstantRange> ranges{ pushConstantRangeMesh  };
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
 
-	pipelineLayoutInfo.pushConstantRangeCount = 1;
-	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+	pipelineLayoutInfo.pushConstantRangeCount =static_cast<uint32_t>(ranges.size());
+	pipelineLayoutInfo.pPushConstantRanges = ranges.data();
 
 	pipelineLayoutInfo.pSetLayouts = &m_pDescriptorPool->GetDescriptorSetLayout();
 
@@ -225,12 +232,12 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 }
 
 template<typename VertexType>
-VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange()
+VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange(VkShaderStageFlagBits shaderStage, uint32_t offset, uint32_t sizeOfObject)
 {
 	VkPushConstantRange pushConstantRange = {};
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Stage the push constant is accessible from
-	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(MeshData); // Size of push constant block
+	pushConstantRange.stageFlags = shaderStage; // Stage the push constant is accessible from
+	pushConstantRange.offset = offset;
+	pushConstantRange.size = sizeOfObject; // Size of push constant block
 	return pushConstantRange;
 }
 

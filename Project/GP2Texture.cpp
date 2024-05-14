@@ -4,9 +4,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-void GP2Texture::CreateTextureImage(const MeshContext& meshContext, const std::string& filename)
+void GP2Texture::CreateTextureImage(const MeshContext& meshContext)
 {
-    m_TextureFile = filename;
+
     int texWidth{}, texHeight{}, texChannels{};
     stbi_uc* pixels = stbi_load(m_TextureFile.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -55,10 +55,26 @@ void GP2Texture::CreateTextureImage(const MeshContext& meshContext, const std::s
 
 void GP2Texture::DestroyTexture(const VkDevice& device)
 {
-    vkDestroySampler(device, m_Sampler, nullptr);
-    vkDestroyImageView(device, m_ImageView, nullptr);
-    vkDestroyImage(device, m_Image, nullptr);
-    vkFreeMemory(device, m_DeviceMemory, nullptr);
+    if(m_Sampler)
+    {
+        vkDestroySampler(device, m_Sampler, nullptr);
+        m_Sampler = nullptr;
+    }
+    if(m_ImageView)
+    {
+        vkDestroyImageView(device, m_ImageView, nullptr);
+        m_ImageView = nullptr;
+    }
+    if(m_Image)
+    {
+        vkDestroyImage(device, m_Image, nullptr);
+        m_Image = nullptr;
+    }
+    if(m_DeviceMemory)
+    {
+        vkFreeMemory(device, m_DeviceMemory, nullptr);
+        m_DeviceMemory = nullptr;
+    }
 }
 
 const VkImageView& GP2Texture::GetImageView() const

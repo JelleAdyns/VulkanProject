@@ -12,7 +12,7 @@ struct GP2Material
 	GP2Material& operator=(GP2Material&& other) noexcept = default;
 
 	GP2Texture* m_Diffuse;
-	GP2Texture* m_Gloss;
+	GP2Texture* m_Roughness;
 	GP2Texture* m_Specular;
 	GP2Texture* m_Normal;
 };
