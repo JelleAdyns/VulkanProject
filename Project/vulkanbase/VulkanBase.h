@@ -127,6 +127,7 @@ private:
 
 
 		m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
+		m_PipelineDiffuse.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, -20.f},100.f, 40, 40, meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
 
@@ -154,19 +155,15 @@ private:
 		statueMat->m_Specular = m_pMapTextures.at(statueTexture).get();
 
 		m_PipelineDiffuse.SetMaterial(boatMaterial,0);
+		m_PipelineDiffuse.SetMaterial(statueMat,1);
 		m_Pipeline3D.SetMaterial(vehicleMaterial, 0);
 		m_Pipeline3D.SetMaterial(vehicleMaterial,1);
-
-		auto& boatMesh = CreateMesh("Resources/Boat.obj", meshContext);
-		boatMesh.SetTexture(meshContext,"Resources/T_Boat_Color.jpg");
-
+		
+		
 		m_Pipeline2D.AddGP2Mesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
 		m_Pipeline2D.AddGP2Mesh(CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext));
 		m_Pipeline2D.AddGP2Mesh(CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext));
 
-		m_Pipeline3D.AddGP2Mesh(vehicleMesh);
-		m_Pipeline3D.AddGP2Mesh(boatMesh);
-		m_Pipeline3D.AddGP2Mesh(birbMesh);
 
 		GP2Material* V2DMaterial{ new GP2Material{} };
 		V2DMaterial->m_Diffuse = m_pMapTextures.at(statueTexture).get();
@@ -189,7 +186,7 @@ private:
 		m_Pipeline2D.SetMaterial(V2DMaterial,0);
 		m_Pipeline2D.SetMaterial(V2DMaterial2,1);
 		m_Pipeline2D.SetMaterial(V2DMaterial3,2);
-	
+
 		m_PipelineDiffuse.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());

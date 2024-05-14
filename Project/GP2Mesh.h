@@ -182,6 +182,150 @@ static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContex
 	
 }
 
+static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
+{
+	GP2Mesh<Vertex3D> sphere{};
+
+	uint32_t currIndex{};
+
+	Vertex3D topPoint{};
+	topPoint.pos = glm::vec3{ center.x, center.y + radius, center.z };
+	topPoint.normal = glm::vec3{ glm::normalize(topPoint.pos) };
+	topPoint.texCoord = glm::vec2{ 0.5f, 0 };
+	sphere.AddVertex(topPoint);
+
+	Vertex3D bottomPoint{};
+	bottomPoint.pos = glm::vec3{ center.x, center.y - radius, center.z };
+	bottomPoint.normal = glm::vec3{ glm::normalize(bottomPoint.pos) };
+	bottomPoint.texCoord = glm::vec2{ 0.5f, 1 };
+	sphere.AddVertex(bottomPoint);
+
+	++currIndex;
+
+	double pi{ glm::pi<double>() };
+	float stepHeight{ radius / (nrOfYDivisions / 2) };
+	double stepAngle{ pi / nrOfYDivisions };
+	Vertex3D currEdgeVertex{};
+
+	
+	std::vector<Vertex3D> firstVertices{  };
+
+	firstVertices.resize(nrOfYDivisions - 1);
+
+	for (size_t yIndex = 0; yIndex < firstVertices.size(); yIndex++)
+	{
+		auto cosValue = glm::cos(stepAngle * (yIndex+1) - (pi / 2));
+		auto sinValue = glm::sin(stepAngle * (yIndex+1) - (pi / 2));
+
+		currEdgeVertex.pos.x = center.x + radius * cosValue;
+		currEdgeVertex.pos.y = center.y - radius * sinValue;
+		currEdgeVertex.pos.z = center.z;
+
+		firstVertices[yIndex] = currEdgeVertex;
+	
+	}
+
+
+	for (size_t yIndex = 0; yIndex < firstVertices.size(); yIndex++)
+	{
+		std::vector<Vertex3D> xDivisionVertices{  };
+		xDivisionVertices.resize(nrOfXDivisions -1);
+		for (int xIndex = 0; xIndex < xDivisionVertices.size(); xIndex++)
+		{
+
+			float xRadius = std::abs(firstVertices[yIndex].pos.x - center.x);
+			double stepXAngle{ pi * 2 / nrOfXDivisions };
+
+			auto cosValue = glm::cos(stepXAngle * (xIndex+1));
+			auto sinValue = glm::sin(stepXAngle * (xIndex+1));
+
+			xDivisionVertices[xIndex].pos.x = (center.x + xRadius * cosValue);
+			xDivisionVertices[xIndex].pos.y = firstVertices[yIndex].pos.y;
+			xDivisionVertices[xIndex].pos.z = (center.z + xRadius * sinValue);
+
+			
+
+		}
+
+		firstVertices[yIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * ((currIndex + 1 - 2) % nrOfXDivisions), (firstVertices[yIndex].pos.y / (radius * 2) + 1) / 2 };
+		firstVertices[yIndex].normal = glm::vec3{ glm::normalize( firstVertices[yIndex].pos )};
+		sphere.AddVertex(firstVertices[yIndex]);
+		++currIndex;
+		
+
+		for (int i = 0; i < xDivisionVertices.size(); i++)
+		{
+			if (yIndex == 0)
+			{
+				sphere.AddIndex(currIndex);
+				sphere.AddIndex(0);
+			}
+			else
+			{
+				sphere.AddIndex(currIndex);
+				sphere.AddIndex(currIndex - nrOfXDivisions);
+			}
+
+			xDivisionVertices[i].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * ((currIndex + 1 - 2) % nrOfXDivisions), (xDivisionVertices[i].pos.y / (radius * 2) + 1) / 2 };
+			xDivisionVertices[i].normal = glm::vec3{ glm::normalize( xDivisionVertices[i].pos )};
+			sphere.AddVertex(xDivisionVertices[i]);
+			++currIndex;
+
+			sphere.AddIndex(currIndex);
+
+			if (yIndex > 0)
+			{
+				sphere.AddIndex(currIndex);
+				sphere.AddIndex(currIndex - nrOfXDivisions - 1);
+				sphere.AddIndex(currIndex - nrOfXDivisions);
+			}
+
+		}
+
+		if (yIndex == 0)
+		{
+			sphere.AddIndex(0);
+			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
+			sphere.AddIndex(currIndex);
+		}
+		else
+		{
+			sphere.AddIndex(currIndex);
+			sphere.AddIndex(currIndex - nrOfXDivisions);
+			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
+
+			sphere.AddIndex(currIndex - nrOfXDivisions);
+			sphere.AddIndex(currIndex - nrOfXDivisions - (nrOfXDivisions-1));
+			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
+		}
+
+		// Bottom Cicle
+		if (yIndex == firstVertices.size() - 1)
+		{
+			for (int i = 0; i < xDivisionVertices.size(); i++)
+			{
+
+				sphere.AddIndex(1);
+				sphere.AddIndex(currIndex - (i+1));
+				sphere.AddIndex(currIndex - i);
+
+			}
+
+			sphere.AddIndex(1);
+			sphere.AddIndex(currIndex);
+			sphere.AddIndex(currIndex - nrOfXDivisions + 1);
+		}
+
+	}
+
+
+
+	sphere.UploadBuffers(meshContext);
+
+	return sphere;
+
+}
+
 static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext)
 {
 
@@ -499,7 +643,6 @@ static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX,
 
 		oval.AddIndex(i);
 		oval.AddIndex(0);
-		oval.AddIndex(i);
 		if (i == numberOfSegments) oval.AddIndex(1);
 		else oval.AddIndex(i+1);
 	}
