@@ -114,20 +114,36 @@ private:
 		const std::string statueTexture{ "Resources/texture.jpg" };
 		const std::string vehicleDiffuse{ "Resources/vehicle_diffuse.png"  };
 		const std::string vehicleNormal{ "Resources/vehicle_normal.png"  };
-		const std::string vehicleroughness{ "Resources/vehicle_gloss.png"  };
+		const std::string vehicleRoughness{ "Resources/vehicle_gloss.png"  };
 		const std::string vehicleSpecular{ "Resources/vehicle_specular.png"  };
 		const std::string boatDiffuse{ "Resources/T_Boat_Color.jpg" };
+		const std::string sciFiDiffuse{ "Resources/TCom_Scifi_Floor3_1K_albedo.png" };
+		const std::string sciFiNormal{ "Resources/TCom_Scifi_Floor3_1K_normal.png" };
+		const std::string sciFiSpecular{ "Resources/TCom_Scifi_Floor3_1K_metallic.png" };
+		const std::string sciFiRoughness{ "Resources/TCom_Scifi_Floor3_1K_roughness.png" };
+		const std::string forrestDiffuse{ "Resources/xkglaihn_2K_Albedo.jpg" };
+		const std::string forrestNormal{ "Resources/xkglaihn_2K_Normal.jpg" };
+		const std::string forrestSpecular{ "Resources/xkglaihn_2K_Metalness.jpg" };
+		const std::string forrestRoughness{ "Resources/xkglaihn_2K_Roughness.jpg" };
 
 		m_pMapTextures[statueTexture] = std::make_unique<GP2Texture>(meshContext, statueTexture);
 		m_pMapTextures[vehicleDiffuse] = std::make_unique<GP2Texture>(meshContext, vehicleDiffuse);
 		m_pMapTextures[vehicleNormal] = std::make_unique<GP2Texture>(meshContext, vehicleNormal);
-		m_pMapTextures[vehicleroughness] = std::make_unique<GP2Texture>(meshContext, vehicleroughness);
+		m_pMapTextures[vehicleRoughness] = std::make_unique<GP2Texture>(meshContext, vehicleRoughness);
 		m_pMapTextures[vehicleSpecular] = std::make_unique<GP2Texture>(meshContext, vehicleSpecular);
 		m_pMapTextures[boatDiffuse] = std::make_unique<GP2Texture>(meshContext, boatDiffuse);
+		m_pMapTextures[sciFiDiffuse] = std::make_unique<GP2Texture>(meshContext, sciFiDiffuse);
+		m_pMapTextures[sciFiNormal] = std::make_unique<GP2Texture>(meshContext, sciFiNormal);
+		m_pMapTextures[sciFiSpecular] = std::make_unique<GP2Texture>(meshContext, sciFiSpecular);
+		m_pMapTextures[sciFiRoughness] = std::make_unique<GP2Texture>(meshContext, sciFiRoughness);
+		m_pMapTextures[forrestDiffuse] = std::make_unique<GP2Texture>(meshContext, forrestDiffuse);
+		m_pMapTextures[forrestNormal] = std::make_unique<GP2Texture>(meshContext, forrestNormal);
+		m_pMapTextures[forrestSpecular] = std::make_unique<GP2Texture>(meshContext, forrestSpecular);
+		m_pMapTextures[forrestRoughness] = std::make_unique<GP2Texture>(meshContext, forrestRoughness);
 
 
 		m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
-		m_PipelineDiffuse.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, 0.f},100.f, 20, 20, meshContext));
+		m_Pipeline3D.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, 0.f},100.f, 40, 40, meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
 		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
 
@@ -135,29 +151,31 @@ private:
 		GP2Material* vehicleMaterial{ new GP2Material{} };
 		vehicleMaterial->m_Diffuse = m_pMapTextures.at(vehicleDiffuse).get();
 		vehicleMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
-		vehicleMaterial->m_Roughness = m_pMapTextures.at(vehicleroughness).get();
+		vehicleMaterial->m_Roughness = m_pMapTextures.at(vehicleRoughness).get();
 		vehicleMaterial->m_Specular = m_pMapTextures.at(vehicleSpecular).get();
 
 		GP2Material* boatMaterial{ new GP2Material{} };
 		boatMaterial->m_Diffuse = m_pMapTextures.at(boatDiffuse).get();
 		boatMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
-		boatMaterial->m_Roughness = m_pMapTextures.at(vehicleroughness).get();
+		boatMaterial->m_Roughness = m_pMapTextures.at(vehicleRoughness).get();
 		boatMaterial->m_Specular = m_pMapTextures.at(vehicleSpecular).get();
+
+		GP2Material* sphereMaterial{ new GP2Material{} };
+		sphereMaterial->m_Diffuse = m_pMapTextures.at(forrestDiffuse).get();
+		sphereMaterial->m_Normal = m_pMapTextures.at(forrestNormal).get();
+		sphereMaterial->m_Roughness = m_pMapTextures.at(forrestRoughness).get();
+		sphereMaterial->m_Specular = m_pMapTextures.at(forrestSpecular).get();
+
 
 		GP2Material* birbMaterial{ new GP2Material{} };
 		birbMaterial->m_Diffuse = m_pMapTextures.at(vehicleDiffuse).get();
 		birbMaterial->m_Normal = m_pMapTextures.at(vehicleNormal).get();
 
-		GP2Material* statueMat{ new GP2Material{} };
-		statueMat->m_Diffuse = m_pMapTextures.at(statueTexture).get();
-		statueMat->m_Normal = m_pMapTextures.at(statueTexture).get();
-		statueMat->m_Roughness = m_pMapTextures.at(statueTexture).get();
-		statueMat->m_Specular = m_pMapTextures.at(statueTexture).get();
 
 		m_PipelineDiffuse.SetMaterial(boatMaterial,0);
-		m_PipelineDiffuse.SetMaterial(statueMat,1);
-		m_Pipeline3D.SetMaterial(vehicleMaterial, 0);
-		m_Pipeline3D.SetMaterial(vehicleMaterial,1);
+		m_Pipeline3D.SetMaterial(sphereMaterial,0);
+		m_Pipeline3D.SetMaterial(vehicleMaterial, 1);
+		m_Pipeline3D.SetMaterial(vehicleMaterial,2);
 		
 		
 		m_Pipeline2D.AddGP2Mesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));

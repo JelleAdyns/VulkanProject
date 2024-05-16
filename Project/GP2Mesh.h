@@ -7,6 +7,7 @@
 #include "GP2CommandPool.h"
 #include "GP2CommandBuffer.h"
 #include <vector>
+#include <algorithm>
 #include "Vertex.h"
 #include "OBJParser.h"
 #include <glm/ext/scalar_constants.hpp>
@@ -194,6 +195,9 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 	Vertex3D currEdgeVertex{};
 
 	
+	std::vector<Vertex3D> officialVertices{  };
+	std::vector<uint32_t> officialIndices{  };
+
 	std::vector<Vertex3D> firstVertices{  };
 
 	firstVertices.resize(nrOfYDivisions +1);
@@ -229,24 +233,108 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 			xDivisionVertices[xIndex].pos.y = firstVertices[yIndex].pos.y;
 			xDivisionVertices[xIndex].pos.z = (center.z + xRadius * sinValue);
 
-			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, -(xDivisionVertices[xIndex].pos.y / (radius * 2) + 1) / 2 };
+			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, (-xDivisionVertices[xIndex].pos.y / (radius * 2) + 1) / 2 };
 			xDivisionVertices[xIndex].normal = glm::vec3{ glm::normalize(xDivisionVertices[xIndex].pos )};
-			sphere.AddVertex(xDivisionVertices[xIndex]);
+			officialVertices.push_back(xDivisionVertices[xIndex]);
 
 			if(yIndex != 0 || xIndex != 0)++currIndex;
 
-			sphere.AddIndex(currIndex);
-			sphere.AddIndex(currIndex + nrOfXDivisions + 1);
-			sphere.AddIndex(currIndex + 1);
+			if(yIndex < firstVertices.size() - 1 && xIndex < xDivisionVertices.size() - 1)
+			{
 
-			sphere.AddIndex(currIndex + nrOfXDivisions + 1);
-			sphere.AddIndex(currIndex + nrOfXDivisions + 1 + 1);
-			sphere.AddIndex(currIndex + 1);
+				officialIndices.push_back(currIndex);
+				officialIndices.push_back(currIndex + nrOfXDivisions + 1);
+				officialIndices.push_back(currIndex + 1);
+
+				officialIndices.push_back(currIndex + nrOfXDivisions + 1);
+				officialIndices.push_back(currIndex + nrOfXDivisions + 1 + 1);
+				officialIndices.push_back(currIndex + 1);
+			}
 
 		}
 
 	}
 
+	for (uint32_t i = 0; i < officialIndices.size(); i += 3)
+	{
+		uint32_t index0 = officialIndices[i];
+		uint32_t index1 = officialIndices[i + 1];
+		if (index1 == 16)
+		{
+			int i  = 0;
+		}
+		uint32_t index2 = officialIndices[i + 2];
+
+		const glm::vec3& p0 = officialVertices[index0].pos;
+		const glm::vec3& p1 = officialVertices[index1].pos;
+		const glm::vec3& p2 = officialVertices[index2].pos;
+		const glm::vec2& uv0 = officialVertices[index0].texCoord;
+		const glm::vec2& uv1 = officialVertices[index1].texCoord;
+		const glm::vec2& uv2 = officialVertices[index2].texCoord;
+
+		const glm::vec3 edge0 = p1 - p0;
+		const glm::vec3 edge1 = p2 - p0;
+		const glm::vec2 delta_uv0 = uv1 - uv0;
+		const glm::vec2 delta_uv1 = uv2 - uv0;
+
+		float determinant = delta_uv0.x * delta_uv1.y - delta_uv0.y * delta_uv1.x;
+
+		// Check for determinant close to zero
+		if (fabs(determinant) < 1e-6f)
+		{
+			// Handle near-zero determinant case, skip or use fallback value
+			
+			officialVertices[index0].tangent = { 0.f, 0.f, 1.f };
+			officialVertices[index1].tangent = { 0.f, 0.f, 1.f };
+			officialVertices[index2].tangent = { 0.f, 0.f, 1.f };
+			continue;							 
+		}
+
+		float r = 1.0f / determinant;
+
+		glm::vec3 tangent = (edge0 * delta_uv1.y - edge1 * delta_uv0.y) * r;
+		tangent = glm::normalize(tangent); // Normalize the tangent
+		tangent.y *= -1;
+
+		officialVertices[index0].tangent = tangent;
+		officialVertices[index1].tangent = tangent;
+		officialVertices[index2].tangent = tangent;
+
+		//const glm::vec3& p0{ officialVertices[index0].pos[0], officialVertices[index0].pos[1], officialVertices[index0].pos[2] };
+		//const glm::vec3& p1{ officialVertices[index1].pos[0], officialVertices[index1].pos[1], officialVertices[index1].pos[2] };
+		//const glm::vec3& p2{ officialVertices[index2].pos[0], officialVertices[index2].pos[1], officialVertices[index2].pos[2] };
+		//const glm::vec2& uv0{ officialVertices[index0].texCoord[0], officialVertices[index0].texCoord[1] };
+		//const glm::vec2& uv1{ officialVertices[index1].texCoord[0], officialVertices[index1].texCoord[1] };
+		//const glm::vec2& uv2{ officialVertices[index2].texCoord[0], officialVertices[index2].texCoord[1] };
+
+		//const glm::vec3 edge0 = p1 - p0;
+		//const glm::vec3 edge1 = p2 - p0;
+		//const glm::vec3 diffX = glm::vec3(uv1.x - uv0.x, uv2.x - uv0.x, 0);
+		//const glm::vec3 diffY = glm::vec3(uv1.y - uv0.y, uv2.y - uv0.y, 0);
+
+
+		//float r = 1.f / glm::length(glm::cross(diffX, diffY));
+
+		////r = std::max(0.f, r);
+
+		//glm::vec3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
+		//officialVertices[index0].tangent = tangent;
+		//officialVertices[index1].tangent = tangent;
+		//officialVertices[index2].tangent = tangent;
+
+		
+	}
+
+	for (size_t i = 0; i < officialVertices.size(); i++)
+	{
+		//officialVertices[i].tangent = (officialVertices[i].tangent - officialVertices[i].normal * (glm::dot(officialVertices[i].tangent, officialVertices[i].normal) / glm::dot(officialVertices[i].normal, officialVertices[i].normal)));
+		//officialVertices[i].tangent = glm::normalize(officialVertices[i].tangent);
+		sphere.AddVertex(officialVertices[i]);
+	}
+	for (size_t i = 0; i < officialIndices.size(); i++)
+	{
+		sphere.AddIndex(officialIndices[i]);
+	}
 
 	sphere.UploadBuffers(meshContext);
 

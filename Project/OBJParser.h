@@ -84,8 +84,8 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 						file >> iTexCoord;
 
 						vertex.texCoord = UVs[iTexCoord - 1];
-						vertex.texCoord[0] = UVs[iTexCoord - 1][0];
-						vertex.texCoord[1] = UVs[iTexCoord - 1][1];
+						//vertex.texCoord[0] = UVs[iTexCoord - 1][0];
+						//vertex.texCoord[1] = UVs[iTexCoord - 1][1];
 
 					}
 
@@ -123,11 +123,36 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 	//Cheap Tangent Calculations
 	for (uint32_t i = 0; i < indices.size(); i += 3)
 	{
+
 		uint32_t index0 = indices[i];
 		uint32_t index1 = indices[size_t(i) + 1];
 		uint32_t index2 = indices[size_t(i) + 2];
-			
-		const glm::vec3& p0{ vertices[index0].pos[0], vertices[index0].pos[1], vertices[index0].pos[2] };
+		
+		vertices[index0].tangent = { 0.f,0.f,0.f };
+		vertices[index1].tangent = { 0.f,0.f,0.f };
+		vertices[index2].tangent = { 0.f,0.f,0.f };
+
+		glm::vec3 delta_pos1 = vertices[index1].pos - vertices[index0].pos;
+		glm::vec3 delta_pos2 = vertices[index2].pos - vertices[index0].pos;
+		glm::vec2 delta_uv1 = vertices[index1].texCoord - vertices[index0].texCoord;
+		glm::vec2 delta_uv2 = vertices[index2].texCoord - vertices[index0].texCoord;
+		
+		float determinant = (delta_uv1.x * delta_uv2.y - delta_uv1.y * delta_uv2.x);
+		if (fabs(determinant) < 1e-6f)
+		{
+			vertices[index0].tangent = {0.f,0.f,0.f};
+			vertices[index1].tangent = {0.f,0.f,0.f};
+			vertices[index2].tangent = { 0.f,0.f,0.f };
+			continue;
+		}
+		float r = 1.0f / determinant;
+		glm::vec3 tangent = (delta_pos1 * delta_uv2.y - delta_pos2 * delta_uv1.y) * r;
+		
+		vertices[index0].tangent += glm::normalize(tangent);
+		vertices[index1].tangent += glm::normalize(tangent);
+		vertices[index2].tangent += glm::normalize(tangent);
+
+		/*const glm::vec3& p0{ vertices[index0].pos[0], vertices[index0].pos[1], vertices[index0].pos[2] };
 		const glm::vec3& p1{ vertices[index1].pos[0], vertices[index1].pos[1], vertices[index1].pos[2] };
 		const glm::vec3& p2{ vertices[index2].pos[0], vertices[index2].pos[1], vertices[index2].pos[2] };
 		const glm::vec2& uv0{ vertices[index0].texCoord[0], vertices[index0].texCoord[1] };
@@ -143,15 +168,15 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 		glm::vec3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
 		vertices[index0].tangent += tangent;
 		vertices[index1].tangent += tangent;
-		vertices[index2].tangent += tangent;
+		vertices[index2].tangent += tangent;*/
 	}
 			
 	//Create the Tangents (reject)
 	for (auto& v : vertices)
 	{
-		v.tangent = (v.tangent - v.normal * (glm::dot(v.tangent, v.normal) / glm::dot(v.normal, v.normal)));
+		v.tangent = (v.tangent - v.normal * (glm::dot(v.tangent, v.normal)));
 		v.tangent = glm::normalize(v.tangent);
-
+		//v.tangent.z *= -1.f;
 		if(flipAxisAndWinding)
 		{
 			v.pos.z *= -1.f;

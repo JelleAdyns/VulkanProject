@@ -20,10 +20,10 @@ void main()
     //------------------
     // CONSTANTS
 
-    const vec3 lightDirection = vec3(.577f, -.577f, .577f);
+    const vec3 lightDirection = normalize(vec3(0.577, -0.577, 0.577));
     const float lightIntensity = 7.f;
     const float shininess = 25.f;
-    const vec3 ambient = { 0.03f, 0.03f, 0.03f };
+    const vec3 ambient = { 0.003f, 0.003f, 0.003f };
     const float PI = 3.14159265358979323846f;
 
     //------------------
@@ -31,18 +31,29 @@ void main()
     //------------------
     // NORMAL CALCULATIONS
 
-    vec3 biNormal = cross(fragNormal, fragTangent);
-    mat3x3 tangentSpaceAxis = mat3x3(fragTangent, biNormal, fragNormal);
-    vec3 normalSample = texture(normalTexSampler, fragTexCoord).rgb * 2 - vec3(1.f, 1.f, 1.f);
-    
-    normalSample = normalize(tangentSpaceAxis * normalSample);
 
+    //Shoutout to this guy for the normal map format!!
+    //https://www.reddit.com/r/vulkan/comments/wksa4z/strange_issue_with_normal_maps_in_pbr_shader/
+
+
+
+    vec3 N = normalize(fragNormal);
+    vec3 T = normalize(fragTangent);
+    vec3 B = normalize(cross(N, T));
+
+    mat3 tangentSpaceAxis = mat3(T, B, N);
+  
+    vec3 normalSample = texture(normalTexSampler, fragTexCoord).rgb * 2.0 - 1.0;
+
+
+    normalSample = tangentSpaceAxis * normalize(normalSample );
+    //normalSample = vec3(normalSample.x,-normalSample.y,normalSample.z);
+
+ 
     float observedArea = dot(normalSample, -lightDirection);
     //float observedArea = dot(fragNormal, -lightDirection); //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     //------------------
-
-
 
 
     if (observedArea > 0) 
@@ -50,7 +61,7 @@ void main()
         //------------------
         // DIFFUSE CALCUATIONS
 
-        //vec3 diffuse = (lightIntensity *  texture(diffuseTexSampler, fragTexCoord).rgb / PI) * observedArea; //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        vec3 diffuse = (lightIntensity *  texture(diffuseTexSampler, fragTexCoord).rgb / PI) * observedArea; //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         //------------------
 
@@ -58,13 +69,13 @@ void main()
         //------------------
         // GLOSS CALCUATIONS
 
-        //vec3 reflection = reflect(lightDirection, normalSample);
+        vec3 reflection = reflect(lightDirection, normalSample);
         //vec3 reflection = reflect(lightDirection, fragNormal); //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        //vec3 invViewDirection = normalize(fragCameraPos - fragWorldPos.xyz );
+        vec3 invViewDirection = normalize(fragCameraPos - fragWorldPos.xyz );
 
-       // const float cosAlpha = max(0.f, dot(reflection,invViewDirection));
-        //const vec3 specular = pow(cosAlpha, texture(roughnessTexSampler, fragTexCoord).r * shininess) * texture(specularTexSampler, fragTexCoord).rgb;
+        const float cosAlpha = max(0.f, dot(reflection,invViewDirection));
+        const vec3 specular = pow(cosAlpha, texture(roughnessTexSampler, fragTexCoord).r * shininess) * texture(specularTexSampler, fragTexCoord).rgb;
 
         //------------------
 
@@ -72,15 +83,16 @@ void main()
         //------------------
         // OUPUT
 
-        //outColor = clamp(vec4(diffuse ,0.f),0.f,1.f); //CORRECT!!!!!!!!!!!!!!!!!!!
-        //outColor = clamp(vec4(specular ,0.f),0.f,1.f);
-        //outColor = clamp(vec4(diffuse  + specular,0.f),0.f,1.f);
-        outColor = clamp(vec4(observedArea,observedArea,observedArea, 0.f),0.f,1.f);
+        //outColor = clamp(vec4(diffuse ,0.0),0.0,1.0); //CORRECT!!!!!!!!!!!!!!!!!!!
+        //outColor = clamp(vec4(specular ,0.0),0.0,1.0);
+        outColor = clamp(vec4(diffuse  + specular + ambient,1.0),0.0,1.0);
+        //outColor = clamp(vec4(observedArea,observedArea,observedArea, 1.0),0.0,1.0);
 
         //------------------
     }
     else
     {
-        outColor = vec4(0.f,0.f,0.f, 0.0f);
+        //outColor = vec4(vec3(0.0, 0.0, 0.0), 1.0);
+        outColor = vec4(ambient, 0.0f);
     }
 }

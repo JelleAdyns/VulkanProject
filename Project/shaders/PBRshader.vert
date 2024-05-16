@@ -25,6 +25,7 @@ layout(location = 4) out vec4 fragWorldPos;
 layout(location = 5) out vec3 fragCameraPos;
 
 
+
 void main()
 {
 
