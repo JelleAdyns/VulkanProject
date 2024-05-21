@@ -7,6 +7,8 @@
 #pragma warning(push)
 #pragma warning(disable : 4505) //Warning unreferenced local function
 
+static void CalculateTangents(std::vector<Vertex3D>& vertices, std::vector<uint32_t>& indices);
+
 static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding = true)
 {
 	std::ifstream file(filename);
@@ -121,71 +123,72 @@ static bool ParseOBJ(const std::string& filename, std::vector<Vertex3D>& vertice
 	}
 
 	//Cheap Tangent Calculations
-	for (uint32_t i = 0; i < indices.size(); i += 3)
-	{
-
-		uint32_t index0 = indices[i];
-		uint32_t index1 = indices[size_t(i) + 1];
-		uint32_t index2 = indices[size_t(i) + 2];
-		
-		vertices[index0].tangent = { 0.f,0.f,0.f };
-		vertices[index1].tangent = { 0.f,0.f,0.f };
-		vertices[index2].tangent = { 0.f,0.f,0.f };
-
-		glm::vec3 delta_pos1 = vertices[index1].pos - vertices[index0].pos;
-		glm::vec3 delta_pos2 = vertices[index2].pos - vertices[index0].pos;
-		glm::vec2 delta_uv1 = vertices[index1].texCoord - vertices[index0].texCoord;
-		glm::vec2 delta_uv2 = vertices[index2].texCoord - vertices[index0].texCoord;
-		
-		float determinant = (delta_uv1.x * delta_uv2.y - delta_uv1.y * delta_uv2.x);
-		if (fabs(determinant) < 1e-6f)
-		{
-			vertices[index0].tangent = {0.f,0.f,0.f};
-			vertices[index1].tangent = {0.f,0.f,0.f};
-			vertices[index2].tangent = { 0.f,0.f,0.f };
-			continue;
-		}
-		float r = 1.0f / determinant;
-		glm::vec3 tangent = (delta_pos1 * delta_uv2.y - delta_pos2 * delta_uv1.y) * r;
-		
-		vertices[index0].tangent += glm::normalize(tangent);
-		vertices[index1].tangent += glm::normalize(tangent);
-		vertices[index2].tangent += glm::normalize(tangent);
-
-		/*const glm::vec3& p0{ vertices[index0].pos[0], vertices[index0].pos[1], vertices[index0].pos[2] };
-		const glm::vec3& p1{ vertices[index1].pos[0], vertices[index1].pos[1], vertices[index1].pos[2] };
-		const glm::vec3& p2{ vertices[index2].pos[0], vertices[index2].pos[1], vertices[index2].pos[2] };
-		const glm::vec2& uv0{ vertices[index0].texCoord[0], vertices[index0].texCoord[1] };
-		const glm::vec2& uv1{ vertices[index1].texCoord[0], vertices[index1].texCoord[1] };
-		const glm::vec2& uv2{ vertices[index2].texCoord[0], vertices[index2].texCoord[1] };
-			
-		const glm::vec3 edge0 = p1 - p0;
-		const glm::vec3 edge1 = p2 - p0;
-		const glm::vec3 diffX = glm::vec3(uv1.x - uv0.x, uv2.x - uv0.x, 0);
-		const glm::vec3 diffY = glm::vec3(uv1.y - uv0.y, uv2.y - uv0.y, 0);
-		float r = 1.f / glm::length(glm::cross(diffX, diffY));
-			
-		glm::vec3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
-		vertices[index0].tangent += tangent;
-		vertices[index1].tangent += tangent;
-		vertices[index2].tangent += tangent;*/
-	}
+	CalculateTangents(vertices, indices);
 			
 	//Create the Tangents (reject)
 	for (auto& v : vertices)
 	{
-		v.tangent = (v.tangent - v.normal * (glm::dot(v.tangent, v.normal)));
-		v.tangent = glm::normalize(v.tangent);
-		//v.tangent.z *= -1.f;
 		if(flipAxisAndWinding)
 		{
 			v.pos.z *= -1.f;
 			v.normal.z *= -1.f;
 			v.tangent.z *= -1.f;
 		}
-
 	}
 
 	return true;
+}
+
+static void CalculateTangents(std::vector<Vertex3D>& vertices, std::vector<uint32_t>& indices)
+{
+	for (uint32_t i = 0; i < indices.size(); i += 3)
+	{
+
+		uint32_t index0 = indices[i];
+		uint32_t index1 = indices[size_t(i) + 1];
+		uint32_t index2 = indices[size_t(i) + 2];
+
+		const glm::vec3& p0{ vertices[index0].pos };
+		const glm::vec3& p1{ vertices[index1].pos };
+		const glm::vec3& p2{ vertices[index2].pos };
+		const glm::vec2& uv0{ vertices[index0].texCoord };
+		const glm::vec2& uv1{ vertices[index1].texCoord };
+		const glm::vec2& uv2{ vertices[index2].texCoord };
+
+		const glm::vec3 edge0 = p1 - p0;
+		const glm::vec3 edge1 = p2 - p0;
+
+		const glm::vec2 delta_uv0 = uv1 - uv0;
+		const glm::vec2 delta_uv1 = uv2 - uv0;
+
+		float determinant = delta_uv0.x * delta_uv1.y - delta_uv0.y * delta_uv1.x;
+
+		// Check for determinant close to zero
+		if (fabs(determinant) < 1e-6f)
+		{
+			// Handle near-zero determinant case, skip or use fallback value
+			vertices[index0].tangent = { 0.f, 0.f, 0.f };
+			vertices[index1].tangent = { 0.f, 0.f, 0.f };
+			vertices[index2].tangent = { 0.f, 0.f, 0.f };
+			continue;
+		}
+
+		float r = 1.0f / determinant;
+
+		glm::vec3 tangent = (edge0 * delta_uv1.y - edge1 * delta_uv0.y) * r;
+		tangent = glm::normalize(tangent);
+
+		vertices[index0].tangent += tangent;
+		vertices[index1].tangent += tangent;
+		vertices[index2].tangent += tangent;
+
+		vertices[index0].tangent = (vertices[index0].tangent - vertices[index0].normal * (glm::dot(vertices[index0].tangent, vertices[index0].normal)));
+		vertices[index1].tangent = (vertices[index1].tangent - vertices[index1].normal * (glm::dot(vertices[index1].tangent, vertices[index1].normal)));
+		vertices[index2].tangent = (vertices[index2].tangent - vertices[index2].normal * (glm::dot(vertices[index2].tangent, vertices[index2].normal)));
+
+		vertices[index0].tangent = glm::normalize(vertices[index0].tangent);
+		vertices[index1].tangent = glm::normalize(vertices[index1].tangent);
+		vertices[index2].tangent = glm::normalize(vertices[index2].tangent);
+	}
 }
 #pragma warning(pop)

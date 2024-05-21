@@ -183,8 +183,117 @@ static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContex
 	
 }
 
+static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width, float height, float depth, const MeshContext& meshContext)
+{
+	GP2Mesh<Vertex3D> beam{};
+
+	uint32_t currIndex{};
+
+	std::vector<Vertex3D> officialVertices{};
+	std::vector<uint32_t> officialIndices{};
+	auto addFace = [&](std::array<Vertex3D, 4>& arrVertices) 
+		{
+			for (size_t vertex = 0; vertex < arrVertices.size(); vertex++)
+			{
+				switch (vertex)
+				{
+				case 0:
+					arrVertices[vertex].texCoord = glm::vec2{};
+					break;
+				case 1:
+					arrVertices[vertex].texCoord = glm::vec2{1,0};
+					break;
+				case 2:
+					arrVertices[vertex].texCoord = glm::vec2{1,1};
+					break;
+				case 3:
+					arrVertices[vertex].texCoord = glm::vec2{0,1};
+					break;
+				}
+				
+				officialVertices.push_back(arrVertices[vertex]);
+			}
+
+			officialIndices.push_back(currIndex);
+			officialIndices.push_back(currIndex + 1);
+			officialIndices.push_back(currIndex + 2);
+
+			officialIndices.push_back(currIndex);
+			officialIndices.push_back(currIndex + 2);
+			officialIndices.push_back(currIndex + 3);
+
+			currIndex += 4;
+		};
+
+	std::array<Vertex3D, 4> arrVertices{};
+
+	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,1.f,0.f };
+
+	addFace(arrVertices);
+
+	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,0.f,-1.f };
+
+	addFace(arrVertices);
+
+	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,-1.f,0.f };
+
+	addFace(arrVertices);
+
+	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,0.f,1.f };
+
+	addFace(arrVertices);
+
+	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ -1.f,0.f,0.f };
+
+	addFace(arrVertices);
+
+	arrVertices[0].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
+	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 1.f,0.f,0.f };
+
+	addFace(arrVertices);
+
+	CalculateTangents(officialVertices, officialIndices);
+
+	for (size_t i = 0; i < officialVertices.size(); i++) beam.AddVertex(officialVertices[i]);
+
+	for (size_t i = 0; i < officialIndices.size(); i++)	beam.AddIndex(officialIndices[i]);
+
+	beam.UploadBuffers(meshContext);
+
+	return beam;
+}
+static GP2Mesh<Vertex3D> CreateCube(const glm::vec3& center, float size, const MeshContext& meshContext)
+{
+	return CreateBeam(center, size, size, size, meshContext);
+}
+
 static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
 {
+	if (nrOfXDivisions < 3 || nrOfYDivisions < 3) throw std::runtime_error{ "Divisions for the sphere are less than 3." };
+
 	GP2Mesh<Vertex3D> sphere{};
 
 	uint32_t currIndex{};
@@ -233,11 +342,9 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 			xDivisionVertices[xIndex].pos.y = firstVertices[yIndex].pos.y;
 			xDivisionVertices[xIndex].pos.z = (center.z + xRadius * sinValue);
 
-			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, (-xDivisionVertices[xIndex].pos.y / (radius * 2) + 1) / 2 };
+			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, (1.f / nrOfYDivisions) * yIndex };
 			xDivisionVertices[xIndex].normal = glm::vec3{ glm::normalize(xDivisionVertices[xIndex].pos )};
 			officialVertices.push_back(xDivisionVertices[xIndex]);
-
-			if(yIndex != 0 || xIndex != 0)++currIndex;
 
 			if(yIndex < firstVertices.size() - 1 && xIndex < xDivisionVertices.size() - 1)
 			{
@@ -251,90 +358,17 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 				officialIndices.push_back(currIndex + 1);
 			}
 
+			++currIndex;
 		}
 
 	}
 
-	for (uint32_t i = 0; i < officialIndices.size(); i += 3)
-	{
-		uint32_t index0 = officialIndices[i];
-		uint32_t index1 = officialIndices[i + 1];
-		if (index1 == 16)
-		{
-			int i  = 0;
-		}
-		uint32_t index2 = officialIndices[i + 2];
-
-		const glm::vec3& p0 = officialVertices[index0].pos;
-		const glm::vec3& p1 = officialVertices[index1].pos;
-		const glm::vec3& p2 = officialVertices[index2].pos;
-		const glm::vec2& uv0 = officialVertices[index0].texCoord;
-		const glm::vec2& uv1 = officialVertices[index1].texCoord;
-		const glm::vec2& uv2 = officialVertices[index2].texCoord;
-
-		const glm::vec3 edge0 = p1 - p0;
-		const glm::vec3 edge1 = p2 - p0;
-		const glm::vec2 delta_uv0 = uv1 - uv0;
-		const glm::vec2 delta_uv1 = uv2 - uv0;
-
-		float determinant = delta_uv0.x * delta_uv1.y - delta_uv0.y * delta_uv1.x;
-
-		// Check for determinant close to zero
-		if (fabs(determinant) < 1e-6f)
-		{
-			// Handle near-zero determinant case, skip or use fallback value
-			
-			officialVertices[index0].tangent = { 0.f, 0.f, 1.f };
-			officialVertices[index1].tangent = { 0.f, 0.f, 1.f };
-			officialVertices[index2].tangent = { 0.f, 0.f, 1.f };
-			continue;							 
-		}
-
-		float r = 1.0f / determinant;
-
-		glm::vec3 tangent = (edge0 * delta_uv1.y - edge1 * delta_uv0.y) * r;
-		tangent = glm::normalize(tangent); // Normalize the tangent
-		tangent.y *= -1;
-
-		officialVertices[index0].tangent = tangent;
-		officialVertices[index1].tangent = tangent;
-		officialVertices[index2].tangent = tangent;
-
-		//const glm::vec3& p0{ officialVertices[index0].pos[0], officialVertices[index0].pos[1], officialVertices[index0].pos[2] };
-		//const glm::vec3& p1{ officialVertices[index1].pos[0], officialVertices[index1].pos[1], officialVertices[index1].pos[2] };
-		//const glm::vec3& p2{ officialVertices[index2].pos[0], officialVertices[index2].pos[1], officialVertices[index2].pos[2] };
-		//const glm::vec2& uv0{ officialVertices[index0].texCoord[0], officialVertices[index0].texCoord[1] };
-		//const glm::vec2& uv1{ officialVertices[index1].texCoord[0], officialVertices[index1].texCoord[1] };
-		//const glm::vec2& uv2{ officialVertices[index2].texCoord[0], officialVertices[index2].texCoord[1] };
-
-		//const glm::vec3 edge0 = p1 - p0;
-		//const glm::vec3 edge1 = p2 - p0;
-		//const glm::vec3 diffX = glm::vec3(uv1.x - uv0.x, uv2.x - uv0.x, 0);
-		//const glm::vec3 diffY = glm::vec3(uv1.y - uv0.y, uv2.y - uv0.y, 0);
+	CalculateTangents(officialVertices, officialIndices);
 
 
-		//float r = 1.f / glm::length(glm::cross(diffX, diffY));
-
-		////r = std::max(0.f, r);
-
-		//glm::vec3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
-		//officialVertices[index0].tangent = tangent;
-		//officialVertices[index1].tangent = tangent;
-		//officialVertices[index2].tangent = tangent;
-
-		
-	}
-
-	for (size_t i = 0; i < officialVertices.size(); i++)
-	{
-		//officialVertices[i].tangent = (officialVertices[i].tangent - officialVertices[i].normal * (glm::dot(officialVertices[i].tangent, officialVertices[i].normal) / glm::dot(officialVertices[i].normal, officialVertices[i].normal)));
-		//officialVertices[i].tangent = glm::normalize(officialVertices[i].tangent);
-		sphere.AddVertex(officialVertices[i]);
-	}
-	for (size_t i = 0; i < officialIndices.size(); i++)
-	{
-		sphere.AddIndex(officialIndices[i]);
-	}
+	for (size_t i = 0; i < officialVertices.size(); i++) sphere.AddVertex(officialVertices[i]);
+	
+	for (size_t i = 0; i < officialIndices.size(); i++)	sphere.AddIndex(officialIndices[i]);
 
 	sphere.UploadBuffers(meshContext);
 

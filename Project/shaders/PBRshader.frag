@@ -17,24 +17,25 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    //------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------
     // CONSTANTS
 
     const vec3 lightDirection = normalize(vec3(0.577, -0.577, 0.577));
-    const float lightIntensity = 7.f;
+    const float lightIntensity = 5.f;
     const float shininess = 25.f;
-    const vec3 ambient = { 0.003f, 0.003f, 0.003f };
+    const vec3 ambient = { 0.01f, 0.01f, 0.01f };
     const float PI = 3.14159265358979323846f;
 
-    //------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------
 
-    //------------------
+
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------
     // NORMAL CALCULATIONS
 
 
     //Shoutout to this guy for the normal map format!!
     //https://www.reddit.com/r/vulkan/comments/wksa4z/strange_issue_with_normal_maps_in_pbr_shader/
-
 
 
     vec3 N = normalize(fragNormal);
@@ -53,20 +54,20 @@ void main()
     float observedArea = dot(normalSample, -lightDirection);
     //float observedArea = dot(fragNormal, -lightDirection); //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    //------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------
 
 
     if (observedArea > 0) 
     {
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
         // DIFFUSE CALCUATIONS
 
         vec3 diffuse = (lightIntensity *  texture(diffuseTexSampler, fragTexCoord).rgb / PI) * observedArea; //CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
         // GLOSS CALCUATIONS
 
         vec3 reflection = reflect(lightDirection, normalSample);
@@ -77,10 +78,10 @@ void main()
         const float cosAlpha = max(0.f, dot(reflection,invViewDirection));
         const vec3 specular = pow(cosAlpha, texture(roughnessTexSampler, fragTexCoord).r * shininess) * texture(specularTexSampler, fragTexCoord).rgb;
 
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
         // OUPUT
 
         //outColor = clamp(vec4(diffuse ,0.0),0.0,1.0); //CORRECT!!!!!!!!!!!!!!!!!!!
@@ -88,7 +89,7 @@ void main()
         outColor = clamp(vec4(diffuse  + specular + ambient,1.0),0.0,1.0);
         //outColor = clamp(vec4(observedArea,observedArea,observedArea, 1.0),0.0,1.0);
 
-        //------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------------
     }
     else
     {
