@@ -5,9 +5,9 @@
 
 struct Vertex2D
 {
-	glm::vec2 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
+	glm::vec2 pos{};
+	glm::vec3 color{};
+	glm::vec2 texCoord{};
 
 	static VkVertexInputBindingDescription GetBindingDescription()
 	{
@@ -42,11 +42,11 @@ struct Vertex2D
 };
 struct Vertex3D
 {
-	glm::vec3 pos;
+	glm::vec3 pos{};
 	glm::vec3 color{ 1.f,1.f,1.f };
-	glm::vec3 normal;
-	glm::vec3 tangent;
-	glm::vec2 texCoord;
+	glm::vec3 normal{};
+	glm::vec3 tangent{};
+	glm::vec2 texCoord{};
 
 	static VkVertexInputBindingDescription GetBindingDescription()
 	{
