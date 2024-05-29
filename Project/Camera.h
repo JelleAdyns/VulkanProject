@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <iostream>
+#include "vulkanbase/VulkanUtil.h"
 #include "Math.h"
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -9,6 +10,20 @@
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/ext/scalar_constants.hpp> // glm::pi
 #include <GLFW/glfw3.h>
+
+enum class RenderMode : uint32_t
+{
+	Combined = 0,
+	Diffuse = 1,
+	ObservedArea = 2,
+	Specular = 3
+};
+
+struct RenderProperties
+{
+	RenderMode renderingMode;
+	VkBool32 useNormalMap;
+};
 
 class Camera final
 {
@@ -26,6 +41,10 @@ public:
 	const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 	const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 	const glm::vec3& GetCameraOrigin() const { return m_Origin; }
+
+	static RenderProperties GetRenderProperties() { return m_RenderProperties; }
+	static void SetRenderProperties(RenderProperties properties) { m_RenderProperties = properties; }
+
 private:
 
 	void CalculateViewMatrix();
@@ -55,6 +74,8 @@ private:
 
 	int m_Width{};
 	int m_Height{};
+
+	static RenderProperties m_RenderProperties;
 };
 
 

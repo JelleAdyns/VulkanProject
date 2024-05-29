@@ -59,7 +59,7 @@ set(SOURCES
     "ContextStructs.h"
     "GP2Texture.h"
     "GP2Texture.cpp"
-    "GP2Material.h")
+    "GP2Material.h" )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} )

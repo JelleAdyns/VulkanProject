@@ -58,8 +58,8 @@ private:
 template <typename VertexType>
 void GP2Shader<VertexType>::Init(const VulkanContext& vulkanContext)
 {
-	m_VecShadersStageInfos.push_back(CreateFragmentShaderInfo(vulkanContext.device));
 	m_VecShadersStageInfos.push_back(CreateVertexShaderInfo(vulkanContext.device));
+	m_VecShadersStageInfos.push_back(CreateFragmentShaderInfo(vulkanContext.device));
 }
 template <typename VertexType>
 void GP2Shader<VertexType>::DestroyShaderModules(const VkDevice& device)

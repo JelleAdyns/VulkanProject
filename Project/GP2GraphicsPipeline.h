@@ -57,8 +57,9 @@ private:
 	GP2Shader<VertexType> m_Shader;
 	std::unique_ptr<GP2DescriptorPool<ViewProjection, VertexType>> m_pDescriptorPool;
 
+	std::vector< VkPushConstantRange> m_Ranges;
+
 	void CreateGraphicsPipeline(const VkDevice& device);
-	VkPushConstantRange CreatePushConstantRange(VkShaderStageFlagBits shaderStage, uint32_t offset, uint32_t sizeOfObject);
 };
 
 
@@ -183,17 +184,26 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 
-	VkPushConstantRange pushConstantRangeMesh = CreatePushConstantRange(VK_SHADER_STAGE_VERTEX_BIT,0, sizeof(MeshData));
+	VkPushConstantRange pushConstantRangeMesh{};
+	pushConstantRangeMesh.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRangeMesh.offset = 0;
+	pushConstantRangeMesh.size = sizeof(MeshData);
+
+	VkPushConstantRange pushConstantRangeRenderingMode{};
+	pushConstantRangeRenderingMode.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	pushConstantRangeRenderingMode.offset = sizeof(MeshData);
+	pushConstantRangeRenderingMode.size = sizeof(RenderProperties);
 	//VkPushConstantRange pushConstantRangeCamera = CreatePushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT,1, sizeof(m_CameraPos));
-	std::vector< VkPushConstantRange> ranges{ pushConstantRangeMesh  };
+	m_Ranges.push_back(pushConstantRangeMesh);
+	m_Ranges.push_back(pushConstantRangeRenderingMode);
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	pipelineLayoutInfo.pushConstantRangeCount =static_cast<uint32_t>(m_Ranges.size());
+	pipelineLayoutInfo.pPushConstantRanges = m_Ranges.data();
+
 	pipelineLayoutInfo.setLayoutCount = 1;
-
-	pipelineLayoutInfo.pushConstantRangeCount =static_cast<uint32_t>(ranges.size());
-	pipelineLayoutInfo.pPushConstantRanges = ranges.data();
-
 	pipelineLayoutInfo.pSetLayouts = &m_pDescriptorPool->GetDescriptorSetLayout();
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
@@ -202,19 +212,16 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	}
 
 
-	VkGraphicsPipelineCreateInfo pipelineInfo{};
-
+	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-
-	pipelineInfo.stageCount = (uint32_t)m_Shader.GetShaderStageInfos().size();
+	pipelineInfo.stageCount = static_cast<uint32_t>(m_Shader.GetShaderStageInfos().size());
 	pipelineInfo.pStages = m_Shader.GetShaderStageInfos().data();
 	pipelineInfo.pVertexInputState = &m_Shader.CreateVertexInputStateInfo();
 	pipelineInfo.pInputAssemblyState = &m_Shader.CreateInputAssemblyStateInfo();
-
-	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
 	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.layout = m_PipelineLayout;
@@ -222,23 +229,12 @@ void GP2GraphicsPipeline<VertexType>::CreateGraphicsPipeline(const VkDevice& dev
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-
-	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create graphics pipeline!");
+	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create graphics pipeline!");
 	}
 
-	m_Shader.DestroyShaderModules(device);
-}
 
-template<typename VertexType>
-VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange(VkShaderStageFlagBits shaderStage, uint32_t offset, uint32_t sizeOfObject)
-{
-	VkPushConstantRange pushConstantRange = {};
-	pushConstantRange.stageFlags = shaderStage; // Stage the push constant is accessible from
-	pushConstantRange.offset = offset;
-	pushConstantRange.size = sizeOfObject; // Size of push constant block
-	return pushConstantRange;
+	m_Shader.DestroyShaderModules(device);
 }
 
 
@@ -246,6 +242,14 @@ VkPushConstantRange GP2GraphicsPipeline<VertexType>::CreatePushConstantRange(VkS
 template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::Draw(const VkCommandBuffer& cmdBuffer) const
 {
+	//vkCmdPushConstants(
+	//	cmdBuffer,
+	//	m_PipelineLayout,
+	//	VK_SHADER_STAGE_FRAGMENT_BIT, // Stage flag should match the push constant range in the layout
+	//	sizeof(MeshData), // Offset within the push constant block
+	//	sizeof(RenderProperties), // Size of the push constants to update
+	//	&VulkanBase::GetRenderProperties()// Pointer to the data
+	//);
 	for (size_t i = 0; i < m_VecMeshes.size(); i++)
 	{
 		m_pDescriptorPool->BindDescriptorSet(cmdBuffer, GetPipelineLayout(), i);

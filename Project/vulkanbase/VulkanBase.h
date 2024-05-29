@@ -72,6 +72,7 @@ public:
 	static VkImageView CreateImageView(const VkDevice& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	static void TransitionImageLayout(const MeshContext& meshContext, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	static bool HasStencilComponent(VkFormat format);
+
 private:
 	void initVulkan() 
 	{
@@ -215,6 +216,7 @@ private:
 	void InitWindow();
 	void InitializeMaterials(const MeshContext& meshContext);
 	std::unique_ptr<Camera> m_Camera{std::make_unique<Camera>()};
+
 	//GP2Shader3D m_Shader{"shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };
 
 	// Week 02

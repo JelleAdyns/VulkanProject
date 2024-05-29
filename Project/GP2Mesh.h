@@ -2,6 +2,7 @@
 #include "vulkanbase/VulkanUtil.h"
 #include "ContextStructs.h"
 #include "GP2Buffer.h"
+#include "Camera.h"
 #include "GP2Texture.h"
 #include "GP2Material.h"
 #include "GP2CommandPool.h"
@@ -112,7 +113,14 @@ void GP2Mesh<VertexType>::Draw(VkPipelineLayout pipelineLayout, const VkCommandB
 		sizeof(MeshData), // Size of the push constants to update
 		& m_VertexConstant // Pointer to the data
 		);
-
+	vkCmdPushConstants(
+		cmdBuffer,
+		pipelineLayout,
+		VK_SHADER_STAGE_FRAGMENT_BIT, // Stage flag should match the push constant range in the layout
+		sizeof(MeshData), // Offset within the push constant block
+		sizeof(RenderProperties), // Size of the push constants to update
+		&Camera::GetRenderProperties()// Pointer to the data
+	);
 
 	vkCmdDrawIndexed(cmdBuffer, static_cast<uint32_t>(m_VecIndices.size()), 1, 0, 0, 0);
 }
@@ -161,7 +169,7 @@ void GP2Mesh<VertexType>::SetMaterial(GP2Material* newMaterial)
 	m_pMaterial = newMaterial;
 }
 
-static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = true)
+inline static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContext& meshContext, bool flipAxisWinding = true)
 {
 
 	GP2Mesh<Vertex3D> mesh{};
@@ -183,7 +191,7 @@ static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const MeshContex
 	
 }
 
-static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width, float height, float depth, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width, float height, float depth, const MeshContext& meshContext)
 {
 	GP2Mesh<Vertex3D> beam{};
 
@@ -285,12 +293,12 @@ static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width, float 
 
 	return beam;
 }
-static GP2Mesh<Vertex3D> CreateCube(const glm::vec3& center, float size, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateCube(const glm::vec3& center, float size, const MeshContext& meshContext)
 {
 	return CreateBeam(center, size, size, size, meshContext);
 }
 
-static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
 {
 	if (nrOfXDivisions < 3 || nrOfYDivisions < 3) throw std::runtime_error{ "Divisions for the sphere are less than 3." };
 
@@ -376,7 +384,7 @@ static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int
 
 }
 
-static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, float right, const MeshContext& meshContext)
 {
 
 	assert((left < right) && "Left is greater than right");
@@ -400,7 +408,7 @@ static GP2Mesh<Vertex2D> CreateRectangle(float top, float left, float bottom, fl
 	return rect;
 }
 
-static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bottom, float right, float radiusX, float radiusY, int numberOfSegmentsPerCorner, const MeshContext& meshContext)
 {
 
 	assert((left < right) && "Left is greater than right");
@@ -663,7 +671,7 @@ static GP2Mesh<Vertex2D> CreateRoundedRectangle(float top, float left, float bot
 	return rect;
 }
 
-static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex2D> CreateOval(float centerX, float centerY, float radiusX, float radiusY, int numberOfSegments, const MeshContext& meshContext)
 {
 
 	assert((radiusX > 0 && radiusY > 0));

@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+RenderProperties Camera::m_RenderProperties{ RenderMode::Combined, true };
+
 Camera::Camera(const glm::vec3& _origin, float _fovAngle) :
 	m_Origin{ _origin },
 	m_FovAngle{ _fovAngle }
@@ -38,6 +40,30 @@ void Camera::CalculateProjectionMatrix()
 
 void Camera::KeyEvent(int key, int scancode, int action, int mods)
 {
+
+	if (key == GLFW_KEY_F1 && action == GLFW_PRESS)
+	{
+		switch (m_RenderProperties.renderingMode)
+		{
+		case RenderMode::Combined:
+			m_RenderProperties.renderingMode = RenderMode::Diffuse;
+			break;
+		case RenderMode::Diffuse:
+			m_RenderProperties.renderingMode = RenderMode::ObservedArea;
+			break;
+		case RenderMode::ObservedArea:
+			m_RenderProperties.renderingMode = RenderMode::Specular;
+			break;
+		case RenderMode::Specular:
+			m_RenderProperties.renderingMode = RenderMode::Combined;
+			break;
+		}
+	}
+	if (key == GLFW_KEY_F2 && action == GLFW_PRESS)
+	{
+		if (m_RenderProperties.useNormalMap) m_RenderProperties.useNormalMap = 0;
+		else m_RenderProperties.useNormalMap = 1;
+	}
 
 	if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Forward * m_TranslateSpeed;
 	
@@ -106,10 +132,6 @@ void Camera::MouseMove(GLFWwindow* window, double xpos, double ypos)
 }
 void Camera::MouseEvent(GLFWwindow* window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-	{
-		std::cout << "right mouse button pressed\n";
-	}
 }
 
 

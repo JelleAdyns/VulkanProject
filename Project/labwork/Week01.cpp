@@ -130,3 +130,4 @@ void VulkanBase::InitializeMaterials(const MeshContext& meshContext)
 	m_pMapMaterials[statueMatKey].reset(statueMaterial);
 
 }
+
