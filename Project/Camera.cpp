@@ -47,22 +47,34 @@ void Camera::KeyEvent(int key, int scancode, int action, int mods)
 		{
 		case RenderMode::Combined:
 			m_RenderProperties.renderingMode = RenderMode::Diffuse;
+			std::cout << "DIFFUSE MODE\n";
 			break;
 		case RenderMode::Diffuse:
 			m_RenderProperties.renderingMode = RenderMode::ObservedArea;
+			std::cout << "OBSERVED AREA MODE\n";
 			break;
 		case RenderMode::ObservedArea:
 			m_RenderProperties.renderingMode = RenderMode::Specular;
+			std::cout << "SPECULAR MODE\n";
 			break;
 		case RenderMode::Specular:
 			m_RenderProperties.renderingMode = RenderMode::Combined;
+			std::cout << "COMBINED MODE\n";
 			break;
 		}
 	}
 	if (key == GLFW_KEY_F2 && action == GLFW_PRESS)
 	{
-		if (m_RenderProperties.useNormalMap) m_RenderProperties.useNormalMap = 0;
-		else m_RenderProperties.useNormalMap = 1;
+		if (m_RenderProperties.useNormalMap)
+		{
+			m_RenderProperties.useNormalMap = 0;
+			std::cout << "NORMAL MAPS: false\n";
+		}
+		else 
+		{
+			m_RenderProperties.useNormalMap = 1;
+			std::cout << "NORMAL MAPS: true\n";
+		}
 	}
 
 	if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Forward * m_TranslateSpeed;

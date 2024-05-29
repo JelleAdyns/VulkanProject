@@ -112,39 +112,7 @@ private:
 		// week 02
 		m_Camera->Initialize(WIDTH, HEIGHT, 45.f, {0.f,0.f,-150.f});
 
-		InitializeMaterials(meshContext);
-
-
-		m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
-
-		m_PipelineDiffuse.SetMaterial(m_pMapMaterials["Boat"].get(), 0);
-
-
-		m_Pipeline3D.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, 0.f},100.f, 100, 100, meshContext));
-		m_Pipeline3D.AddGP2Mesh(CreateCube(glm::vec3{0.f, 0.f, 0.f},100.f, meshContext));
-		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
-		m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
-		m_Pipeline3D.AddGP2Mesh(CreateSphere(glm::vec3{0.f,0.f, 0.f},50.f, 100, 100, meshContext));
-
-		m_Pipeline3D.SetMaterial(m_pMapMaterials["SciFi"].get(), 0);
-		m_Pipeline3D.SetMaterial(m_pMapMaterials["SciFi"].get(),1);
-		m_Pipeline3D.SetMaterial(m_pMapMaterials["Vehicle"].get(), 2);
-		m_Pipeline3D.SetMaterial(m_pMapMaterials["Vehicle"].get(),3);
-		m_Pipeline3D.SetMaterial(m_pMapMaterials["RoughMetal"].get(), 4);
-		
-		
-		m_Pipeline2D.AddGP2Mesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
-		m_Pipeline2D.AddGP2Mesh(CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext));
-		m_Pipeline2D.AddGP2Mesh(CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext));
-
-		m_Pipeline2D.SetMaterial(m_pMapMaterials["Forrest"].get(),0);
-		m_Pipeline2D.SetMaterial(m_pMapMaterials["Statue"].get(),1);
-		m_Pipeline2D.SetMaterial(m_pMapMaterials["Statue"].get(),2);
-		
-
-		m_PipelineDiffuse.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
-		m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
-		m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
+		InitializeScene(vulkanContext, meshContext);
 
 		m_CommandBuffer = m_CommandPool.CreateCommandBuffer(device);
 		CreateDepthResources();
@@ -214,7 +182,7 @@ private:
 
 	GLFWwindow* window;
 	void InitWindow();
-	void InitializeMaterials(const MeshContext& meshContext);
+	void InitializeScene(const VulkanContext& vulkanContext, const MeshContext& meshContext);
 	std::unique_ptr<Camera> m_Camera{std::make_unique<Camera>()};
 
 	//GP2Shader3D m_Shader{"shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };

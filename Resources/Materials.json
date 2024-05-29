@@ -1,0 +1,47 @@
+{
+  "AmountOfMaterials": 6,
+  "Materials": [
+    {
+      "Key": "Vehicle",
+      "Diffuse": "vehicle_diffuse.png",
+      "Normals": "vehicle_normal.png",
+      "Specular": "vehicle_specular.png",
+      "Roughness": "vehicle_gloss.png"
+    },
+    {
+      "Key": "Boat",
+      "Diffuse": "T_Boat_Color.jpg",
+      "Normals": "Blanco.png",
+      "Specular": "Blanco.png",
+      "Roughness": "Blanco.png"
+    },
+    {
+      "Key": "SciFi",
+      "Diffuse": "TCom_Scifi_Floor3_1K_albedo.png",
+      "Normals": "TCom_Scifi_Floor3_1K_normal.png",
+      "Specular": "TCom_Scifi_Floor3_1K_metallic.png",
+      "Roughness": "TCom_Scifi_Floor3_1K_roughness.png"
+    },
+    {
+      "Key": "RoughMetal",
+      "Diffuse": "vcenefcew_2K_Albedo.jpg",
+      "Normals": "vcenefcew_2K_Normal.jpg",
+      "Specular": "vcenefcew_2K_Specular.jpg",
+      "Roughness": "vcenefcew_2K_Roughness.jpg"
+    },
+    {
+      "Key": "Forrest",
+      "Diffuse": "xkglaihn_2K_Albedo.jpg",
+      "Normals": "xkglaihn_2K_Normal.jpg",
+      "Specular": "xkglaihn_2K_Metalness.jpg",
+      "Roughness": "xkglaihn_2K_Roughness.jpg"
+    },
+    {
+      "Key": "Statue",
+      "Diffuse": "Statue.jpg",
+      "Normals": "Blanco.png",
+      "Specular": "Blanco.png",
+      "Roughness": "Blanco.png"
+    }
+  ]
+}
