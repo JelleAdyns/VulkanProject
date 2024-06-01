@@ -12,7 +12,7 @@
 #include "Vertex.h"
 #include "OBJParser.h"
 #include <glm/ext/scalar_constants.hpp>
-
+#include <glm/gtx/matrix_decompose.hpp>
 
 class GP2CommandPool;
 
@@ -32,6 +32,7 @@ public:
 	void AddIndex(uint32_t index);
 
 	void SetModelMatrix(const MeshData& meshData);
+	void SetTranslation(const glm::vec3& translation);
 
 	GP2Material* GetMaterial() const;
 	void SetMaterial(GP2Material* newMaterial);
@@ -44,6 +45,9 @@ private:
 	GP2Buffer m_IndexBuffer{};
 	std::vector<VertexType> m_VecVertices{};
 	std::vector<uint32_t> m_VecIndices{};
+
+	glm::vec3 m_Translation{};
+
 	MeshData m_VertexConstant{};
 };
 
@@ -152,13 +156,30 @@ void GP2Mesh<VertexType>::AddIndex(uint32_t index)
 }
 
 template<typename VertexType>
-inline void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
+void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 {
-	m_VertexConstant = meshData;
+	/*glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(meshData.model, scale, rotation, translation, skew, perspective);*/
+
+	MeshData newModel{ meshData };
+	newModel.model[3] += glm::vec4(m_Translation,0.f);
+
+	m_VertexConstant = newModel;
 }
 
 template<typename VertexType>
-inline GP2Material* GP2Mesh<VertexType>::GetMaterial() const
+void GP2Mesh<VertexType>::SetTranslation(const glm::vec3& translation)
+{
+	m_Translation = translation;
+	SetModelMatrix(MeshData{});
+}
+
+template<typename VertexType>
+GP2Material* GP2Mesh<VertexType>::GetMaterial() const
 {
 	return m_pMaterial;
 }
@@ -191,7 +212,7 @@ inline static GP2Mesh<Vertex3D> CreateMesh(const std::string& objFile, const Mes
 	
 }
 
-inline static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width, float height, float depth, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateBeam(float width, float height, float depth, const MeshContext& meshContext)
 {
 	GP2Mesh<Vertex3D> beam{};
 
@@ -235,50 +256,50 @@ inline static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width,
 
 	std::array<Vertex3D, 4> arrVertices{};
 
-	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
+	arrVertices[0].pos = glm::vec3{ - width / 2,+ height / 2, + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ + width / 2,+ height / 2, + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ + width / 2,+ height / 2, - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ - width / 2,+ height / 2, - depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,1.f,0.f };
 
 	addFace(arrVertices);
 
-	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[0].pos = glm::vec3{ - width / 2,+ height / 2, - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ + width / 2,+ height / 2, - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ + width / 2,- height / 2, - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ - width / 2,- height / 2, - depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,0.f,-1.f };
 
 	addFace(arrVertices);
 
-	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[0].pos = glm::vec3{ - width / 2,- height / 2, - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ + width / 2,- height / 2, - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ + width / 2,- height / 2, + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ - width / 2,- height / 2, + depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,-1.f,0.f };
 
 	addFace(arrVertices);
 
-	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
+	arrVertices[0].pos = glm::vec3{ - width / 2,- height / 2, + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ + width / 2,- height / 2, + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ + width / 2,+ height / 2, + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ - width / 2,+ height / 2, + depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 0.f,0.f,1.f };
 
 	addFace(arrVertices);
 
-	arrVertices[0].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z + depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x - width / 2,center.y + height / 2, center.z - depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z - depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x - width / 2,center.y - height / 2, center.z + depth / 2 };
+	arrVertices[0].pos = glm::vec3{ - width / 2,+ height / 2, + depth / 2 };
+	arrVertices[1].pos = glm::vec3{ - width / 2,+ height / 2, - depth / 2 };
+	arrVertices[2].pos = glm::vec3{ - width / 2,- height / 2, - depth / 2 };
+	arrVertices[3].pos = glm::vec3{ - width / 2,- height / 2, + depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ -1.f,0.f,0.f };
 
 	addFace(arrVertices);
 
-	arrVertices[0].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z - depth / 2 };
-	arrVertices[1].pos = glm::vec3{ center.x + width / 2,center.y + height / 2, center.z + depth / 2 };
-	arrVertices[2].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z + depth / 2 };
-	arrVertices[3].pos = glm::vec3{ center.x + width / 2,center.y - height / 2, center.z - depth / 2 };
+	arrVertices[0].pos = glm::vec3{ + width / 2,+ height / 2, - depth / 2 };
+	arrVertices[1].pos = glm::vec3{ + width / 2,+ height / 2, + depth / 2 };
+	arrVertices[2].pos = glm::vec3{ + width / 2,- height / 2, + depth / 2 };
+	arrVertices[3].pos = glm::vec3{ + width / 2,- height / 2, - depth / 2 };
 	for (size_t vertex = 0; vertex < arrVertices.size(); vertex++) arrVertices[vertex].normal = glm::vec3{ 1.f,0.f,0.f };
 
 	addFace(arrVertices);
@@ -293,12 +314,12 @@ inline static GP2Mesh<Vertex3D> CreateBeam(const glm::vec3& center, float width,
 
 	return beam;
 }
-inline static GP2Mesh<Vertex3D> CreateCube(const glm::vec3& center, float size, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateCube(float size, const MeshContext& meshContext)
 {
-	return CreateBeam(center, size, size, size, meshContext);
+	return CreateBeam(size, size, size, meshContext);
 }
 
-inline static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
+inline static GP2Mesh<Vertex3D> CreateSphere(float radius, int nrOfXDivisions, int nrOfYDivisions, const MeshContext& meshContext)
 {
 	if (nrOfXDivisions < 3 || nrOfYDivisions < 3) throw std::runtime_error{ "Divisions for the sphere are less than 3." };
 
@@ -324,9 +345,9 @@ inline static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radi
 		float cosValue = static_cast<float>(glm::cos(stepAngle * (yIndex) - (pi / 2)));
 		float sinValue = static_cast<float>(glm::sin(stepAngle * (yIndex) - (pi / 2)));
 
-		currEdgeVertex.pos.x = center.x + radius * cosValue;
-		currEdgeVertex.pos.y = center.y + radius * sinValue;
-		currEdgeVertex.pos.z = center.z;
+		currEdgeVertex.pos.x = radius * cosValue;
+		currEdgeVertex.pos.y = radius * sinValue;
+		currEdgeVertex.pos.z = 0.f;
 
 		firstVertices[yIndex] = currEdgeVertex;
 	
@@ -340,15 +361,15 @@ inline static GP2Mesh<Vertex3D> CreateSphere(const glm::vec3& center, float radi
 		for (int xIndex = 0; xIndex < xDivisionVertices.size(); xIndex++)
 		{
 
-			float xRadius = std::abs(firstVertices[yIndex].pos.x - center.x);
+			float xRadius = std::abs(firstVertices[yIndex].pos.x);
 			float stepXAngle{ static_cast<float>(pi * 2 / nrOfXDivisions) };
 
 			auto cosValue = glm::cos(stepXAngle * (xIndex));
 			auto sinValue = glm::sin(stepXAngle * (xIndex));
 
-			xDivisionVertices[xIndex].pos.x = (center.x + xRadius * cosValue);
+			xDivisionVertices[xIndex].pos.x = (xRadius * cosValue);
 			xDivisionVertices[xIndex].pos.y = firstVertices[yIndex].pos.y;
-			xDivisionVertices[xIndex].pos.z = (center.z + xRadius * sinValue);
+			xDivisionVertices[xIndex].pos.z = (xRadius * sinValue);
 
 			xDivisionVertices[xIndex].texCoord = glm::vec2{ (1.f / nrOfXDivisions) * xIndex, (1.f / nrOfYDivisions) * yIndex };
 			xDivisionVertices[xIndex].normal = glm::vec3{ glm::normalize(xDivisionVertices[xIndex].pos )};

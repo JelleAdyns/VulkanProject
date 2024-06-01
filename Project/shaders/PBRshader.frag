@@ -33,7 +33,7 @@ void main()
     const vec3 lightDirection = normalize(vec3(0.577, -0.577, 0.577));
     const float lightIntensity = 5.f;
     const float shininess = 25.f;
-    const vec3 ambient = { 0.01f, 0.01f, 0.01f };
+    const vec3 ambient = { 0.2f, 0.2f, 0.2f };
     const float PI = 3.14159265358979323846f;
 
     //------------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ void main()
                 const vec3 specular = pow(cosAlpha, texture(roughnessTexSampler, fragTexCoord).r * shininess) * texture(specularTexSampler, fragTexCoord).rgb;
 
                 // OUTPUT
-                outColor = clamp(vec4(diffuse  + specular + ambient,1.0),0.0,1.0);
+                outColor = clamp(vec4(diffuse  + specular,1.0),0.0,1.0);
             }
             break;
         case 1:
@@ -125,6 +125,6 @@ void main()
     }
     else
     {
-        outColor = vec4(ambient, 0.0f);
+        outColor = vec4(0.f,0.f,0.f, 0.0f);
     }
 }

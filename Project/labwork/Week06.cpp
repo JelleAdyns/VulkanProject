@@ -55,38 +55,48 @@ void VulkanBase::DrawFrame() {
 
 	BeginRenderPass(m_CommandBuffer, swapChainFramebuffers[imageIndex], swapChainExtent);
 
-	static auto startTime = std::chrono::high_resolution_clock::now();
 
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+	glm::mat4 vehicle{ 1.0f };
+	glm::mat4 boat{ 1.0f };
+	glm::mat4 orb{ 1.0f };
+	glm::mat4 beam{ 1.0f };
+	glm::mat4 metal{ 1.0f };
+	glm::mat4 forrest{ 1.0f };
+	glm::mat4 birb{1.0f};
 
-	auto vehicle = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	vehicle = glm::rotate(vehicle, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+	if(m_Rotate)
+	{
+		static auto startTime = std::chrono::high_resolution_clock::now();
 
-	auto boat = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
-	boat = glm::scale(boat, glm::vec3(0.25f, 0.25f, 0.25f));
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+
+		vehicle = glm::rotate(vehicle, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+		orb = glm::rotate(orb, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+		beam = glm::rotate(beam, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+		metal = glm::rotate(metal, time * glm::radians(20.f), glm::vec3(0.0f, .0f, 01.0f));
+		forrest = glm::rotate(forrest, time * glm::radians(20.f), glm::vec3(0.0f, 1.0f, 0.0f));
+		birb = glm::rotate(birb, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 	
-	auto orb = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 100.0f));
-	orb = glm::rotate(orb, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	auto beam = glm::translate(glm::mat4(1.0f), glm::vec3(-150.0f, 0.0f, 0.0f));
-	beam = glm::rotate(beam, time * glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_Pipeline3D.UpdateMeshMatrix(vehicle, 0);
+		m_Pipeline3D.UpdateMeshMatrix(vehicle, 1);
+		m_Pipeline3D.UpdateMeshMatrix(orb, 2);
+		m_Pipeline3D.UpdateMeshMatrix(orb, 3);
+		m_Pipeline3D.UpdateMeshMatrix(metal, 4);
+		m_Pipeline3D.UpdateMeshMatrix(forrest, 5);
+		m_Pipeline3D.UpdateMeshMatrix(forrest, 6);
+	}
 
-	auto metal = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 50.0f, 100.0f));
-	metal = glm::rotate(metal, time * glm::radians(20.f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	auto birb = glm::translate(glm::mat4(1.0f), glm::vec3(25.0f, 0.0f, 50.0f));
-	birb = glm::rotate(birb, time * glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f));
-
+	boat = glm::scale(boat, glm::vec3(0.25f, 0.25f, 0.25f));
 	m_PipelineDiffuse.UpdateMeshMatrix(boat, 0);
+
 	m_PipelineDiffuse.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_PipelineDiffuse.Record(m_CommandBuffer, swapChainExtent);
 
-	m_Pipeline3D.UpdateMeshMatrix(orb, 0);
-	m_Pipeline3D.UpdateMeshMatrix(beam, 1);
-	m_Pipeline3D.UpdateMeshMatrix(vehicle, 2);
-	m_Pipeline3D.UpdateMeshMatrix(birb, 3);
-	m_Pipeline3D.UpdateMeshMatrix(metal, 4);
+	
 	m_Pipeline3D.UpdateUniformBuffer(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 	m_Pipeline3D.Record(m_CommandBuffer, swapChainExtent);
 

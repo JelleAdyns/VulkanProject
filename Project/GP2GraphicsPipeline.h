@@ -41,6 +41,7 @@ public:
 
 	void AddGP2Mesh(const GP2Mesh<VertexType>& mesh);
 	void UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex);
+	void SetMeshTranslation(const glm::vec3& translation, size_t meshIndex);
 	void SetMaterial(GP2Material* pMaterial, int meshIndex);
 	void UpdateUniformBuffer(const glm::mat4& view, const glm::mat4& projection);
 	void Record(const GP2CommandBuffer& cmdBuffer, VkExtent2D vkExtent) const;
@@ -86,6 +87,11 @@ template <typename VertexType>
 void GP2GraphicsPipeline<VertexType>::UpdateMeshMatrix(const glm::mat4& model, size_t meshIndex)
 {
 	m_VecMeshes[meshIndex].SetModelMatrix(MeshData{ model });
+}
+template<typename VertexType>
+void GP2GraphicsPipeline<VertexType>::SetMeshTranslation(const glm::vec3& translation, size_t meshIndex)
+{
+	m_VecMeshes[meshIndex].SetTranslation(translation);
 }
 template<typename VertexType>
 inline void GP2GraphicsPipeline<VertexType>::SetMaterial(GP2Material* pMaterial, int meshIndex)

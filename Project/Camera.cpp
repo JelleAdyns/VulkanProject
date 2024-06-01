@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include <vulkanbase/VulkanBase.h>
 
 RenderProperties Camera::m_RenderProperties{ RenderMode::Combined, true };
 
@@ -76,6 +77,12 @@ void Camera::KeyEvent(int key, int scancode, int action, int mods)
 			std::cout << "NORMAL MAPS: true\n";
 		}
 	}
+
+	if (key == GLFW_KEY_F3 && action == GLFW_PRESS)
+	{
+		VulkanBase::ToggleRotation();
+	}
+
 
 	if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) m_Origin += m_Forward * m_TranslateSpeed;
 	

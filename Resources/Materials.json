@@ -1,5 +1,4 @@
 {
-  "AmountOfMaterials": 6,
   "Materials": [
     {
       "Key": "Vehicle",
@@ -35,6 +34,13 @@
       "Normals": "xkglaihn_2K_Normal.jpg",
       "Specular": "xkglaihn_2K_Metalness.jpg",
       "Roughness": "xkglaihn_2K_Roughness.jpg"
+    },
+    {
+      "Key": "Stones",
+      "Diffuse": "xeupfiu_2K_Albedo.jpg",
+      "Normals": "xeupfiu_2K_Normal.jpg",
+      "Specular": "xeupfiu_2K_Metalness.jpg",
+      "Roughness": "xeupfiu_2K_Roughness.jpg"
     },
     {
       "Key": "Statue",

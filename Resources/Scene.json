@@ -1,11 +1,143 @@
-[
-  {
-    "Key": "Vehcile",
-    "Diffuse": "",
-  },
-  {
-    "Rectangle":,
-    "Filename":,
-    "Material":,
+{
+  "Scene": {
+    "PBRMeshes": [
+      {
+        "Material": "Vehicle",
+        "ObjFile": "vehicle.obj",
+        "Translation": {
+          "x": 0,
+          "y": 0,
+          "z": -20
+        }
+      },
+      {
+        "Material": "Vehicle",
+        "Cube": 20,
+        "Translation": {
+          "x": 40,
+          "y": 0,
+          "z": -20
+        }
+      },
+      {
+        "Material": "SciFi",
+        "Cube": 100,
+        "Translation": {
+          "x": -100,
+          "y": 0,
+          "z": 0
+        }
+      },
+      {
+        "Material": "SciFi",
+        "Sphere": {
+          "Radius": 100,
+          "xDivisions": 60,
+          "yDivisions": 60
+        },
+        "Translation": {
+          "x": 200,
+          "y": 0,
+          "z": 0
+        }
+      },
+      {
+        "Material": "RoughMetal",
+        "Sphere": {
+          "Radius": 50,
+          "xDivisions": 60,
+          "yDivisions": 60
+        },
+        "Translation": {
+          "x": 500,
+          "y": 0,
+          "z": 0
+        }
+      },
+      {
+        "Material": "Forrest",
+        "Beam": {
+          "Width": 100,
+          "Height": 10,
+          "Depth": 100
+        },
+        "Translation": {
+          "x": 375,
+          "y": 0,
+          "z": 0
+        }
+      },
+      {
+        "Material": "Stones",
+        "Beam": {
+          "Width": 100,
+          "Height": 50,
+          "Depth": 100
+        },
+        "Translation": {
+          "x": 650,
+          "y": 0,
+          "z": 0
+        }
+      }
+    ],
+    "FlatShadingMeshes": [
+      {
+        "Material": "Boat",
+        "ObjFile": "Boat.obj",
+        "Translation": {
+          "x": -300,
+          "y": -50,
+          "z": 50
+        }
+      },
+      {
+        "Material": "RoughMetal",
+        "Sphere": {
+          "Radius": 50,
+          "xDivisions": 60,
+          "yDivisions": 60
+        },
+        "Translation": {
+          "x": -400,
+          "y": 0,
+          "z": 0
+        }
+      }
+    ],
+    "2DMeshes": [
+      {
+        "Material": "Forrest",
+        "Rect": {
+          "Top": 650,
+          "Left": 10,
+          "Bottom": 800,
+          "Right": 160
+        }
+      },
+      {
+        "Material": "Statue",
+        "Oval": {
+          "x": 1100,
+          "y": 720,
+          "RadiusX": 100,
+          "RadiusY": 80,
+          "Segments": 20
+        }
+      },
+      {
+        "Material": "Statue",
+        "RoundedRect": {
+          "Top": 0,
+          "Left": 1000,
+          "Bottom": 200,
+          "Right": 1200,
+          "RadiusX": 30,
+          "RadiusY": 50,
+          "SegmentsPerCorner": 20
+        }
+      }
+    ]
+
   }
-]
+}

@@ -18,9 +18,9 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     const vec3 lightDirection = vec3(.577f, -.577f, .577f);
-    float observedArea = max(dot(fragNormal, -lightDirection), 0.2);
+    float observedArea = max(dot(fragNormal, -lightDirection), 0.f);
     vec3 diffuse = observedArea*fragColor;
-    
-    if(renderProperties.renderingMode == 2) outColor = vec4(diffuse, 1.0);
-    else outColor = vec4(diffuse, 1.0) * texture(diffuseTexSampler, fragTexCoord);
+
+    if(renderProperties.renderingMode == 2) outColor =  vec4(observedArea,observedArea,observedArea, 1.0);
+    else outColor = vec4(texture(diffuseTexSampler, fragTexCoord).rgb * observedArea, 1.0);
 }

@@ -67,7 +67,7 @@ private:
 
 	glm::vec2 m_DragStart{};
 
-	const float m_TranslateSpeed{ 5.f };
+	const float m_TranslateSpeed{ 15.f };
 
 	glm::mat4 m_ViewMatrix{};
 	glm::mat4 m_ProjectionMatrix{};

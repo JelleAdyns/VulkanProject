@@ -1,6 +1,8 @@
 #include "vulkanbase/VulkanBase.h"
 #include "nlohmann/json.hpp"
 
+bool VulkanBase::m_Rotate{ true };
+
 void VulkanBase::InitWindow() {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -27,83 +29,159 @@ void VulkanBase::InitWindow() {
 
 void VulkanBase::InitializeScene(const VulkanContext& vulkanContext, const MeshContext& meshContext)
 {
-	const std::string resourcePath{ "Resources/" };
 
 	if (std::ifstream jsonMaterials{ "Resources/Materials.json" }; jsonMaterials.is_open())
 	{
 		nlohmann::json jsonData = nlohmann::json::parse(jsonMaterials);
 
-		int amountOfMAterials{jsonData["AmountOfMaterials"].get<int>()};
-
-		for (int materialIndex = 0; materialIndex < amountOfMAterials; ++materialIndex)
-		{
-			auto materialObject = (jsonData["Materials"])[materialIndex];
-
-			const std::string diffuseFile = materialObject["Diffuse"].get<std::string>();
-			const std::string normalsFile = materialObject["Normals"].get<std::string>();
-			const std::string specularFile = materialObject["Specular"].get<std::string>();
-			const std::string roughnessFile = materialObject["Roughness"].get<std::string>();
-
-			if (auto it = m_pMapTextures.find(diffuseFile); it == m_pMapTextures.cend())
-			{
-				m_pMapTextures[diffuseFile] = std::make_unique<GP2Texture>(meshContext, resourcePath + diffuseFile);
-			}
-			if (auto it = m_pMapTextures.find(normalsFile); it == m_pMapTextures.cend())
-			{
-				m_pMapTextures[normalsFile] = std::make_unique<GP2Texture>(meshContext, resourcePath + normalsFile);
-			}
-			if (auto it = m_pMapTextures.find(specularFile); it == m_pMapTextures.cend())
-			{
-				m_pMapTextures[specularFile] = std::make_unique<GP2Texture>(meshContext, resourcePath + specularFile);
-			}
-			if (auto it = m_pMapTextures.find(roughnessFile); it == m_pMapTextures.cend())
-			{
-				m_pMapTextures[roughnessFile] = std::make_unique<GP2Texture>(meshContext, resourcePath + roughnessFile);
-			}
-
-			GP2Material* material{ new GP2Material{} };
-			material->m_Diffuse = m_pMapTextures.at(diffuseFile).get();
-			material->m_Normal = m_pMapTextures.at(normalsFile).get();
-			material->m_Roughness = m_pMapTextures.at(roughnessFile).get();
-			material->m_Specular = m_pMapTextures.at(specularFile).get();
-
-			m_pMapMaterials[materialObject["Key"].get<std::string>()].reset(material);
-
-		}
-		
+		InitializeMaterials(jsonData["Materials"], meshContext);
 	}
 
+	if (std::ifstream jsonScene{ "Resources/Scene.json" }; jsonScene.is_open())
+	{
+		nlohmann::json jsonData = nlohmann::json::parse(jsonScene);
+		auto scene = jsonData["Scene"];
 
-	m_PipelineDiffuse.AddGP2Mesh(CreateMesh("Resources/Boat.obj", meshContext));
+		Initialize3DMeshes(scene["PBRMeshes"], m_Pipeline3D, meshContext);
 
-	m_PipelineDiffuse.SetMaterial(m_pMapMaterials["Boat"].get(), 0);
+		Initialize3DMeshes(scene["FlatShadingMeshes"], m_PipelineDiffuse, meshContext);
 
-
-	m_Pipeline3D.AddGP2Mesh(CreateSphere(glm::vec3{ 0.f,0.f, 0.f }, 100.f, 100, 100, meshContext));
-	m_Pipeline3D.AddGP2Mesh(CreateCube(glm::vec3{ 0.f, 0.f, 0.f }, 100.f, meshContext));
-	m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/vehicle.obj", meshContext));
-	m_Pipeline3D.AddGP2Mesh(CreateMesh("Resources/birb.obj", meshContext));
-	m_Pipeline3D.AddGP2Mesh(CreateSphere(glm::vec3{ 0.f,0.f, 0.f }, 50.f, 100, 100, meshContext));
-
-	m_Pipeline3D.SetMaterial(m_pMapMaterials["SciFi"].get(), 0);
-	m_Pipeline3D.SetMaterial(m_pMapMaterials["SciFi"].get(), 1);
-	m_Pipeline3D.SetMaterial(m_pMapMaterials["Vehicle"].get(), 2);
-	m_Pipeline3D.SetMaterial(m_pMapMaterials["Vehicle"].get(), 3);
-	m_Pipeline3D.SetMaterial(m_pMapMaterials["RoughMetal"].get(), 4);
-
-
-	m_Pipeline2D.AddGP2Mesh(CreateRectangle(500, 20, HEIGHT, 300, meshContext));
-	m_Pipeline2D.AddGP2Mesh(CreateRoundedRectangle(0, 1000, 200, WIDTH, 50.f, 50.f, 10, meshContext));
-	m_Pipeline2D.AddGP2Mesh(CreateOval(WIDTH - 100.f, HEIGHT - 100.f, 100, 100, 40, meshContext));
-
-	m_Pipeline2D.SetMaterial(m_pMapMaterials["Forrest"].get(), 0);
-	m_Pipeline2D.SetMaterial(m_pMapMaterials["Statue"].get(), 1);
-	m_Pipeline2D.SetMaterial(m_pMapMaterials["Statue"].get(), 2);
+		Initialize2DMeshes(scene["2DMeshes"], m_Pipeline2D, meshContext);
+	}
 
 
 	m_PipelineDiffuse.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 	m_Pipeline3D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 	m_Pipeline2D.Initialize(vulkanContext, meshContext, swapChainImageFormat, FindDepthFormat());
 
+}
+
+void VulkanBase::InitializeMaterials(const nlohmann::json& materials, const MeshContext& meshContext)
+{
+	for (auto materialObject : materials)
+	{
+		const std::string diffuseFile = materialObject["Diffuse"].get<std::string>();
+		const std::string normalsFile = materialObject["Normals"].get<std::string>();
+		const std::string specularFile = materialObject["Specular"].get<std::string>();
+		const std::string roughnessFile = materialObject["Roughness"].get<std::string>();
+
+		if (auto it = m_pMapTextures.find(diffuseFile); it == m_pMapTextures.cend())
+		{
+			m_pMapTextures[diffuseFile] = std::make_unique<GP2Texture>(meshContext, m_ResourcePath + diffuseFile);
+		}
+		if (auto it = m_pMapTextures.find(normalsFile); it == m_pMapTextures.cend())
+		{
+			m_pMapTextures[normalsFile] = std::make_unique<GP2Texture>(meshContext, m_ResourcePath + normalsFile);
+		}
+		if (auto it = m_pMapTextures.find(specularFile); it == m_pMapTextures.cend())
+		{
+			m_pMapTextures[specularFile] = std::make_unique<GP2Texture>(meshContext, m_ResourcePath + specularFile);
+		}
+		if (auto it = m_pMapTextures.find(roughnessFile); it == m_pMapTextures.cend())
+		{
+			m_pMapTextures[roughnessFile] = std::make_unique<GP2Texture>(meshContext, m_ResourcePath + roughnessFile);
+		}
+
+		GP2Material* material{ new GP2Material{} };
+		material->m_Diffuse = m_pMapTextures.at(diffuseFile).get();
+		material->m_Normal = m_pMapTextures.at(normalsFile).get();
+		material->m_Roughness = m_pMapTextures.at(roughnessFile).get();
+		material->m_Specular = m_pMapTextures.at(specularFile).get();
+
+		m_pMapMaterials[materialObject["Key"].get<std::string>()].reset(material);
+
+	}
+}
+
+void VulkanBase::Initialize3DMeshes(const nlohmann::json& meshes, GP2GraphicsPipeline<Vertex3D>& pipeline, const MeshContext& meshContext)
+{
+
+	for (int meshIndex = 0; meshIndex < meshes.size(); ++meshIndex)
+	{
+		auto mesh = meshes.at(meshIndex);
+
+		if (auto pos = mesh.find("ObjFile"); pos != mesh.cend())
+		{
+			auto filename = mesh["ObjFile"].get<std::string>();
+			pipeline.AddGP2Mesh(CreateMesh(m_ResourcePath + filename, meshContext));
+		}
+		if (auto pos = mesh.find("Cube"); pos != mesh.cend())
+		{
+			auto size = mesh["Cube"].get<float>();
+			pipeline.AddGP2Mesh(CreateCube(size, meshContext));
+		}
+		if (auto pos = mesh.find("Beam"); pos != mesh.cend())
+		{
+			auto beam = mesh["Beam"];
+			auto width = beam["Width"].get<float>();
+			auto height = beam["Height"].get<float>();
+			auto depth = beam["Depth"].get<float>();
+			pipeline.AddGP2Mesh(CreateBeam(width, height, depth, meshContext));
+		}
+		if (auto pos = mesh.find("Sphere"); pos != mesh.cend())
+		{
+			auto sphere = mesh["Sphere"];
+			auto Radius = sphere["Radius"].get<float>();
+			auto xDivisions = sphere["xDivisions"].get<int>();
+			auto yDivisions = sphere["yDivisions"].get<int>();
+			pipeline.AddGP2Mesh(CreateSphere(Radius, xDivisions, yDivisions, meshContext));
+		}
+
+		auto materialKey = mesh["Material"].get<std::string>();
+		pipeline.SetMaterial(m_pMapMaterials[materialKey].get(), meshIndex);
+
+
+		auto translation = mesh["Translation"];
+		glm::vec3 pos{};
+		pos.x = translation["x"].get<float>();
+		pos.y = translation["y"].get<float>();
+		pos.z = translation["z"].get<float>();
+		pipeline.SetMeshTranslation(pos, meshIndex);
+
+	}
+}
+
+void VulkanBase::Initialize2DMeshes(const nlohmann::json& meshes, GP2GraphicsPipeline<Vertex2D>& pipeline, const MeshContext& meshContext)
+{
+
+	for (int meshIndex = 0; meshIndex < meshes.size(); ++meshIndex)
+	{
+		auto mesh = meshes.at(meshIndex);
+
+		if (auto pos = mesh.find("Rect"); pos != mesh.cend())
+		{
+			auto rect = mesh["Rect"];
+			auto top = rect["Top"].get<float>();
+			auto left = rect["Left"].get<float>();
+			auto bottom = rect["Bottom"].get<float>();
+			auto right = rect["Right"].get<float>();
+			pipeline.AddGP2Mesh(CreateRectangle(top, left, bottom, right, meshContext));
+		}
+		if (auto pos = mesh.find("RoundedRect"); pos != mesh.cend())
+		{
+			auto rect = mesh["RoundedRect"];
+			auto top = rect["Top"].get<float>();
+			auto left = rect["Left"].get<float>();
+			auto bottom = rect["Bottom"].get<float>();
+			auto right = rect["Right"].get<float>();
+			auto radiusX = rect["RadiusX"].get<float>();
+			auto radiusY = rect["RadiusY"].get<float>();
+			auto segments = rect["SegmentsPerCorner"].get<int>();
+			pipeline.AddGP2Mesh(CreateRoundedRectangle(top, left, bottom, right, radiusX, radiusY, segments, meshContext));
+		}
+		if (auto pos = mesh.find("Oval"); pos != mesh.cend())
+		{
+			auto oval = mesh["Oval"];
+			auto x = oval["x"].get<float>();
+			auto y = oval["y"].get<float>();
+			auto radiusX = oval["RadiusX"].get<float>();
+			auto radiusY = oval["RadiusY"].get<float>();
+			auto segments = oval["Segments"].get<int>();
+			pipeline.AddGP2Mesh(CreateOval(x, y, radiusX, radiusY, segments, meshContext));
+		}
+
+		auto materialKey = mesh["Material"].get<std::string>();
+		pipeline.SetMaterial(m_pMapMaterials[materialKey].get(), meshIndex);
+	}
 }
 

@@ -24,6 +24,7 @@
 #include "Vertex.h"
 #include "Camera.h"
 #include "ContextStructs.h"
+#include "nlohmann/json.hpp"
 #include <map>
 
 
@@ -72,6 +73,7 @@ public:
 	static VkImageView CreateImageView(const VkDevice& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	static void TransitionImageLayout(const MeshContext& meshContext, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	static bool HasStencilComponent(VkFormat format);
+	static void ToggleRotation() { m_Rotate = !m_Rotate; }
 
 private:
 	void initVulkan() 
@@ -179,12 +181,16 @@ private:
 	// simple fragment + vertex shader creation functions
 	// These 5 functions should be refactored into a separate C++ class
 	// with the correct internal state.
-
+	const std::string m_ResourcePath{ "Resources/" };
 	GLFWwindow* window;
 	void InitWindow();
 	void InitializeScene(const VulkanContext& vulkanContext, const MeshContext& meshContext);
+	void InitializeMaterials(const nlohmann::json& materials, const MeshContext& meshContext);
+	void Initialize3DMeshes(const nlohmann::json& meshes, GP2GraphicsPipeline<Vertex3D>& pipeline, const MeshContext& meshContext);
+	void Initialize2DMeshes(const nlohmann::json& meshes, GP2GraphicsPipeline<Vertex2D>& pipeline, const MeshContext& meshContext);
 	std::unique_ptr<Camera> m_Camera{std::make_unique<Camera>()};
 
+	static bool m_Rotate;
 	//GP2Shader3D m_Shader{"shaders/objshader.vert.spv", "shaders/objshader.frag.spv" };
 
 	// Week 02
