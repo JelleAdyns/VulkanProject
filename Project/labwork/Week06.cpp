@@ -1,5 +1,6 @@
 #include "vulkanbase/VulkanBase.h"
 #include <chrono>
+#include <thread>
 
 void VulkanBase::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {};
@@ -151,6 +152,9 @@ void VulkanBase::DrawFrame() {
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		RecreateSwapChain();
 	}
+
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 }
 
 bool CheckValidationLayerSupport() {

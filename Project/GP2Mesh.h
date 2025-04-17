@@ -12,7 +12,6 @@
 #include "Vertex.h"
 #include "OBJParser.h"
 #include <glm/ext/scalar_constants.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
 
 class GP2CommandPool;
 
@@ -158,12 +157,6 @@ void GP2Mesh<VertexType>::AddIndex(uint32_t index)
 template<typename VertexType>
 void GP2Mesh<VertexType>::SetModelMatrix(const MeshData& meshData)
 {
-	/*glm::vec3 scale;
-	glm::quat rotation;
-	glm::vec3 translation;
-	glm::vec3 skew;
-	glm::vec4 perspective;
-	glm::decompose(meshData.model, scale, rotation, translation, skew, perspective);*/
 
 	MeshData newModel{ meshData };
 	newModel.model[3] += glm::vec4(m_Translation,0.f);

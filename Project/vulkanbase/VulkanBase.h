@@ -1,6 +1,7 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
+#define GLM_ENABLE_EXPERIMENTAL
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include "VulkanUtil.h"

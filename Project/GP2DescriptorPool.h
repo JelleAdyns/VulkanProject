@@ -115,8 +115,8 @@ void GP2DescriptorPool<UBO, VertexType>::CreateDescriptorSets(const VkDevice& de
 	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Count);
 	allocInfo.pSetLayouts = layouts.data();
 
-
-	if (vkAllocateDescriptorSets(device, &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) {
+	VkResult result = vkAllocateDescriptorSets(device, &allocInfo, m_DescriptorSets.data());
+	if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 

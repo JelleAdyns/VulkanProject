@@ -70,6 +70,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES} glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(${PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
 
+#copy resourcs
 add_custom_target(copy_resources ALL)
 add_custom_command(
     TARGET copy_resources PRE_BUILD
